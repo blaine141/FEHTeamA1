@@ -16,9 +16,10 @@ DigitalEncoder frontLeftEncoder(FEHIO::P2_0, FEHIO::EitherEdge);
 DigitalEncoder frontRightEncoder(FEHIO::P2_2, FEHIO::EitherEdge);
 DigitalEncoder backLeftEncoder(FEHIO::P2_4, FEHIO::EitherEdge);
 DigitalEncoder backRightEncoder(FEHIO::P2_6, FEHIO::EitherEdge);
-#define MOTOR_POWER 75.0
+#define MOTOR_POWER 30.0
 #define PI 3.1415926536
-
+void buttonDecision(int direction);
+void performanceTestOne(float light);
 void setFrontLeftSpeed(float speed)
 {
     if(speed>0)
@@ -76,103 +77,30 @@ int main(void)
     float speed;
     int frontLeftClicks = 0, frontRightClicks = 0, backRightClicks = 0, backLeftClicks = 0;
 
-drivePolar(20,98,50);
-return 0;
-    LCD.Clear( FEHLCD::Black );
-    LCD.SetFontColor( FEHLCD::White );
 
-    SD.OpenLog();
-        for(int i=-100;i<=100;i+=5)
-        {
-            LCD.WriteAt("    ",0,0);
-            LCD.WriteAt(i,0,0);
-            frontLeft.SetPercent(i);
-            frontRight.SetPercent(i);
-            backLeft.SetPercent(i);
-            backRight.SetPercent(i);
-            Sleep(2.0);
-            frontLeftEncoder.ResetCounts();
-            frontRightEncoder.ResetCounts();
-            backLeftEncoder.ResetCounts();
-            backRightEncoder.ResetCounts();
-            Sleep(4.0);
-            SD.Printf("%d,%d,%d,%d,%d\n",i,frontLeftEncoder.Counts(),frontRightEncoder.Counts(),backLeftEncoder.Counts(),backRightEncoder.Counts());
-        }
-
-FL   speed = 2.6932x - 9.4719       -2.6062x - 8.7879
-BL   speed = 2.6842x - 14.113       -2.6488x - 12.346
-BR   speed = 2.5681x - 10.498       -2.4795x - 9.2121
-FR   speed = 2.6083x - 14.368       -2.4834x - 13.645
-
-
-        SD.CloseLog();
-
-    return 0;
     int direction = 1;
-    if(CdS_Cell.Value()>=0.6)
-    {
-        direction=0;
-    }
-    switch(direction)
-    {
-       case 0:
-           driveLeftFour(5,50);
-           driveForwardFour(10,50);
-           driveBackwardFour(5,50);
-           driveRightFour(20,50);
-        break;
-
-       case 1:
-           driveRightFour(5,50);
-           driveForwardFour(10,50);
-           driveBackwardFour(5,50);
-        break;
-
-       }
 
 
-    return 0;
+
     //Wait for light
     while(light > 2.7)
     {
         light = CdS_Cell.Value();
     }
     //Leave starting area
-    driveForwardFour(30, MOTOR_POWER);
+    driveForwardFour(34, MOTOR_POWER);
     Sleep(500);
     //Go owards button board
-    driveLeftFour(30,MOTOR_POWER);
+    driveLeftFour(37,MOTOR_POWER);
     Sleep(500);
-    //Go into button board
-    driveForwardFour(5,MOTOR_POWER);
-    Sleep(500);
-    //Leave backwards from button board
-    driveBackwardFour(10,MOTOR_POWER);
-    Sleep(500);
-    //Drive towards the wrench
-    driveRightFour(70,MOTOR_POWER);
-    Sleep(500);
-    //Drive towards wall
-    driveForwardFour(64,MOTOR_POWER);
-    Sleep(500);
-    //Drive into lever
-    driveLeftFour(8,MOTOR_POWER);
-    Sleep(500);
-    //Drive back from hitting lever
-    driveRightFour(3,MOTOR_POWER);
-    Sleep(500);
-    //Drive back towards ramp
-    driveBackwardFour(75,MOTOR_POWER);
-    Sleep(500);
-    //Turn my man
-    //turnCounterClockwise(0.8);
-    //Sleep(500);
-    //Drive into wall
-    driveRightFour(15,MOTOR_POWER);
-    Sleep(500);
-    //Drive up ramp
-    driveBackwardFour(150,MOTOR_POWER);
-    Sleep(500);
+    //Choose a button and drive to it
+    buttonDecision(direction);
+    //Drive into wrench
+    driveRightFour(90,MOTOR_POWER);
+    //Drive towards starting/ending area
+    driveLeftFour(50,MOTOR_POWER);
+    //Drive into the ending button
+    driveBackwardFour(50,MOTOR_POWER);
     return 0;
 }
 void drivePolar(float angle, float distance, float percent)
@@ -390,4 +318,73 @@ void driveLeftFour(int counts, float power)
     frontRight.Stop();
     backLeft.Stop();
     backRight.Stop();
+}
+void performanceTestOne(float light)
+{
+    while(light > 2.7)
+    {
+        light = CdS_Cell.Value();
+    }
+    //Leave starting area
+    driveForwardFour(30, MOTOR_POWER);
+    Sleep(500);
+    //Go owards button board
+    driveLeftFour(30,MOTOR_POWER);
+    Sleep(500);
+    //Go into button board
+    driveForwardFour(15,MOTOR_POWER);
+    Sleep(500);
+    //Leave backwards from button board
+    driveBackwardFour(10,MOTOR_POWER);
+    Sleep(500);
+    //Drive towards the wrench
+    driveRightFour(70,MOTOR_POWER);
+    Sleep(500);
+    //Drive towards wall
+    driveForwardFour(75,MOTOR_POWER);
+    Sleep(500);
+    //Drive into lever
+    driveLeftFour(8,MOTOR_POWER);
+    Sleep(500);
+    //Drive back from hitting lever
+    driveRightFour(3,MOTOR_POWER);
+    Sleep(500);
+    //Drive back towards ramp
+    driveBackwardFour(75,MOTOR_POWER);
+    Sleep(500);
+    //Turn my man
+    //turnCounterClockwise(0.8);
+    //Sleep(500);
+    //Drive into wall
+    driveRightFour(15,MOTOR_POWER);
+    Sleep(500);
+    //Drive up ramp
+    driveBackwardFour(150,MOTOR_POWER);
+    Sleep(500);
+}
+void buttonDecision(int direction)
+{
+    if(CdS_Cell.Value()>=0.6)
+    {
+        direction=0;
+    }
+    switch(direction)
+    {
+    case 0:
+       driveLeftFour(8,50);
+       driveForwardFour(10,50);
+       driveBackwardFour(10,50);
+       driveRightFour(8,50);
+       LCD.WriteLine("BLUE");
+    break;
+
+    case 1:
+       driveRightFour(8,50);
+       driveForwardFour(10,50);
+       driveBackwardFour(5,50);
+       driveLeftFour(8,50);
+       LCD.WriteLine("RED");
+    break;
+
+}
 }
