@@ -16,7 +16,7 @@ DigitalEncoder frontLeftEncoder(FEHIO::P2_0, FEHIO::EitherEdge);
 DigitalEncoder frontRightEncoder(FEHIO::P2_2, FEHIO::EitherEdge);
 DigitalEncoder backLeftEncoder(FEHIO::P2_4, FEHIO::EitherEdge);
 DigitalEncoder backRightEncoder(FEHIO::P2_6, FEHIO::EitherEdge);
-#define MOTOR_POWER 30.0
+#define MOTOR_POWER 50.0
 #define PI 3.1415926536
 void buttonDecision(int direction);
 void performanceTestOne(float light);
@@ -69,6 +69,7 @@ void turnCounterClockwise(float sec);
 void turnClockwise(float sec);
 void driveForwardFour(int counts, float power);
 void driveLeftFour(int counts, float power);
+float driveLeftFourCdSCell(int counts, float power);
 void driveRightFour(int counts, float power);
 void driveBackwardFour(int counts, float power);
 int main(void)
@@ -80,7 +81,7 @@ int main(void)
 
     int direction = 1;
 
-
+    float minCdSCellValue = 3.3;
 
     //Wait for light
     while(light > 2.7)
@@ -90,9 +91,20 @@ int main(void)
     //Leave starting area
     driveForwardFour(34, MOTOR_POWER);
     Sleep(500);
-    //Go owards button board
-    driveLeftFour(37,MOTOR_POWER);
+    turnCounterClockwise((0.05));
+    //Go towards button board, but go past and go to wall, reaading CdS cell values along the way
+    minCdSCellValue = driveLeftFourCdSCell(70,MOTOR_POWER);
+
+    LCD.WriteAt(minCdSCellValue,0,20);
+    if(minCdSCellValue>=0.6)
+    {
+        direction=0;
+    }
     Sleep(500);
+    //Drive back to button board
+    driveRightFour(10,MOTOR_POWER);
+    driveBackwardFour(5,MOTOR_POWER);
+    driveRightFour(10, MOTOR_POWER);
     //Choose a button and drive to it
     buttonDecision(direction);
     //Drive into wrench
@@ -364,27 +376,49 @@ void performanceTestOne(float light)
 }
 void buttonDecision(int direction)
 {
-    if(CdS_Cell.Value()>=0.6)
-    {
-        direction=0;
-    }
     switch(direction)
     {
     case 0:
-       driveLeftFour(8,50);
-       driveForwardFour(10,50);
-       driveBackwardFour(10,50);
-       driveRightFour(8,50);
+       driveLeftFour(8,MOTOR_POWER);
+       driveForwardFour(15,MOTOR_POWER);
+       driveBackwardFour(10,MOTOR_POWER);
+       driveRightFour(8,MOTOR_POWER);
        LCD.WriteLine("BLUE");
     break;
 
     case 1:
-       driveRightFour(8,50);
-       driveForwardFour(10,50);
-       driveBackwardFour(5,50);
-       driveLeftFour(8,50);
+       driveRightFour(8,MOTOR_POWER);
+       driveForwardFour(15,MOTOR_POWER);
+       driveBackwardFour(10,MOTOR_POWER);
+       driveLeftFour(8,MOTOR_POWER);
        LCD.WriteLine("RED");
     break;
 
 }
+}
+float driveLeftFourCdSCell(int counts, float power)
+{
+    float minCdSCellValue = 20;
+    int sumClicks = 0;
+    frontRightEncoder.ResetCounts();
+    frontLeftEncoder.ResetCounts();
+    backLeftEncoder.ResetCounts();
+    backRightEncoder.ResetCounts();
+    frontLeft.SetPercent(power);
+    frontRight.SetPercent(-1*power);
+    backRight.SetPercent(power);
+    backLeft.SetPercent(-1*power);
+    while( sumClicks < 4*counts)
+    {
+        sumClicks = frontLeftEncoder.Counts() +frontRightEncoder.Counts() + backRightEncoder.Counts() + backLeftEncoder.Counts();
+        if (minCdSCellValue>CdS_Cell.Value())
+        {
+            minCdSCellValue = CdS_Cell.Value();
+        }
+    }
+    frontLeft.Stop();
+    frontRight.Stop();
+    backLeft.Stop();
+    backRight.Stop();
+    return minCdSCellValue;
 }
