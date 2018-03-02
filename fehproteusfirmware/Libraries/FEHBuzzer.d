@@ -1,4 +1,5 @@
-Libraries\FEHBuzzer.d: Libraries\FEHBuzzer.cpp \
+..\fehproteusfirmware/Libraries/FEHBuzzer.d: \
+ ..\fehproteusfirmware/Libraries/FEHBuzzer.cpp \
  C:\fehqt\Proteus/EWL/EWL_C++/include/lib_ewl_c++.prefix \
  C:\fehqt\Proteus/EWL/EWL_C/include/lib_ewl.prefix \
  C:\fehqt\Proteus/EWL/EWL_C/include/common.prefix \
@@ -11,7 +12,8 @@ Libraries\FEHBuzzer.d: Libraries\FEHBuzzer.cpp \
  C:\fehqt\Proteus/EWL/EWL_C/include/cstdint \
  C:\fehqt\Proteus/EWL/EWL_C/include/limits_api.h \
  C:\fehqt\Proteus/EWL/EWL_C/include/ewl_lib_ext1.h \
- Libraries\/FEHUtility.h Libraries\/FEHBuzzer.h Drivers/uart.h
+ ..\fehproteusfirmware/Libraries/FEHUtility.h \
+ ..\fehproteusfirmware/Libraries/FEHBuzzer.h Drivers/uart.h
 
 C:\fehqt\Proteus/EWL/EWL_C++/include/lib_ewl_c++.prefix:
 
@@ -41,8 +43,8 @@ C:\fehqt\Proteus/EWL/EWL_C/include/limits_api.h:
 
 C:\fehqt\Proteus/EWL/EWL_C/include/ewl_lib_ext1.h:
 
-Libraries\/FEHUtility.h:
+..\fehproteusfirmware/Libraries/FEHUtility.h:
 
-Libraries\/FEHBuzzer.h:
+..\fehproteusfirmware/Libraries/FEHBuzzer.h:
 
 Drivers/uart.h:

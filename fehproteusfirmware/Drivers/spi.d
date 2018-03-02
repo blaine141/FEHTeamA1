@@ -1,8 +1,10 @@
-Drivers\spi.d: Drivers\spi.cpp \
+..\fehproteusfirmware/Drivers/spi.d: \
+ ..\fehproteusfirmware/Drivers/spi.cpp \
  C:\fehqt\Proteus/EWL/EWL_C++/include/lib_ewl_c++.prefix \
  C:\fehqt\Proteus/EWL/EWL_C/include/lib_ewl.prefix \
  C:\fehqt\Proteus/EWL/EWL_C/include/common.prefix \
- C:\fehqt\Proteus/EWL/EWL_C/include/ewl_c_version.h Drivers\/spi.h \
+ C:\fehqt\Proteus/EWL/EWL_C/include/ewl_c_version.h \
+ ..\fehproteusfirmware/Drivers/spi.h \
  ../fehproteusfirmware/Startup/derivative.h Startup/MK60DZ10.h \
  C:\fehqt\Proteus/EWL/EWL_C/include/stdint.h \
  C:\fehqt\Proteus/EWL/EWL_C/include/ansi_parms.h \
@@ -21,7 +23,7 @@ C:\fehqt\Proteus/EWL/EWL_C/include/common.prefix:
 
 C:\fehqt\Proteus/EWL/EWL_C/include/ewl_c_version.h:
 
-Drivers\/spi.h:
+..\fehproteusfirmware/Drivers/spi.h:
 
 ../fehproteusfirmware/Startup/derivative.h:
 

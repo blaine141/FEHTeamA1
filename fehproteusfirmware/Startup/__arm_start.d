@@ -1,4 +1,5 @@
-Startup\__arm_start.d: Startup\__arm_start.cpp \
+..\fehproteusfirmware/Startup/__arm_start.d: \
+ ..\fehproteusfirmware/Startup/__arm_start.cpp \
  C:\fehqt\Proteus/EWL/EWL_C++/include/lib_ewl_c++.prefix \
  C:\fehqt\Proteus/EWL/EWL_C/include/lib_ewl.prefix \
  C:\fehqt\Proteus/EWL/EWL_C/include/common.prefix \
@@ -20,7 +21,8 @@ Startup\__arm_start.d: Startup\__arm_start.cpp \
  C:\fehqt\Proteus/EWL/EWL_C/include/stdint.h \
  C:\fehqt\Proteus/EWL/EWL_C/include/cstdint \
  C:\fehqt\Proteus/EWL/EWL_C/include/limits_api.h \
- Startup/runtime_configuration.h Startup\/derivative.h Startup/MK60DZ10.h \
+ Startup/runtime_configuration.h \
+ ..\fehproteusfirmware/Startup/derivative.h Startup/MK60DZ10.h \
  FEHProteus.h Drivers/FEHPropeller.h Startup/derivative.h \
  Libraries/FEHLCD.h Drivers/spi.h \
  ../fehproteusfirmware/Startup/derivative.h Libraries/FEHUtility.h \
@@ -71,7 +73,7 @@ C:\fehqt\Proteus/EWL/EWL_C/include/limits_api.h:
 
 Startup/runtime_configuration.h:
 
-Startup\/derivative.h:
+..\fehproteusfirmware/Startup/derivative.h:
 
 Startup/MK60DZ10.h:
 

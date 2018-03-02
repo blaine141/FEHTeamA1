@@ -1,4 +1,5 @@
-Drivers\uart.d: Drivers\uart.cpp \
+..\fehproteusfirmware/Drivers/uart.d: \
+ ..\fehproteusfirmware/Drivers/uart.cpp \
  C:\fehqt\Proteus/EWL/EWL_C++/include/lib_ewl_c++.prefix \
  C:\fehqt\Proteus/EWL/EWL_C/include/lib_ewl.prefix \
  C:\fehqt\Proteus/EWL/EWL_C/include/common.prefix \
@@ -10,7 +11,8 @@ Drivers\uart.d: Drivers\uart.cpp \
  C:\fehqt\Proteus/EWL/EWL_C/include/os_enum.h \
  C:\fehqt\Proteus/EWL/EWL_C/include/cstdint \
  C:\fehqt\Proteus/EWL/EWL_C/include/limits_api.h \
- C:\fehqt\Proteus/EWL/EWL_C/include/ewl_lib_ext1.h Drivers\/uart.h
+ C:\fehqt\Proteus/EWL/EWL_C/include/ewl_lib_ext1.h \
+ ..\fehproteusfirmware/Drivers/uart.h
 
 C:\fehqt\Proteus/EWL/EWL_C++/include/lib_ewl_c++.prefix:
 
@@ -40,4 +42,4 @@ C:\fehqt\Proteus/EWL/EWL_C/include/limits_api.h:
 
 C:\fehqt\Proteus/EWL/EWL_C/include/ewl_lib_ext1.h:
 
-Drivers\/uart.h:
+..\fehproteusfirmware/Drivers/uart.h:

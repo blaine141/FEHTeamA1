@@ -493,6 +493,14 @@ void DigitalEncoder::Initialize( FEHIO::FEHIOPin pin, FEHIO::FEHIOInterruptTrigg
 //Interrupt port functions
 unsigned long interrupt_counts[32];
 unsigned long interrupt_time[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+bool new_interrupt[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+void incrementInterrupt(int i)
+{
+    interrupt_counts[i]++;
+    new_interrupt[i] = true;
+}
+
 void portB_isr()
 {
     int pins[8] = { 11, 10, 7, 6, 5, 4, 1, 0 };
@@ -507,11 +515,11 @@ void portB_isr()
                 if(TimeNowMSec() - interrupt_time[i] > 10)
                 {
                     interrupt_time[i] = TimeNowMSec();
-                    interrupt_counts[i]++;
+                    incrementInterrupt(i);
                 }
             }
             else
-                interrupt_counts[i]++;
+                incrementInterrupt(i);
             PORTB_ISFR &= (1<<pins[i]);
         }
     }
@@ -529,11 +537,11 @@ void portC_isr()
                 if(TimeNowMSec() - interrupt_time[i+8] > 10)
                 {
                     interrupt_time[i+8] = TimeNowMSec();
-                    interrupt_counts[i+8]++;
+                    incrementInterrupt(i+8);
                 }
             }
             else
-                interrupt_counts[i+8]++;
+                incrementInterrupt(i+8);
             PORTC_ISFR &= (1<<pins[i]);
         }
     }
@@ -551,11 +559,11 @@ void portA_isr()
                 if(TimeNowMSec() - interrupt_time[i+14] > 10)
                 {
                     interrupt_time[i+14] = TimeNowMSec();
-                    interrupt_counts[i+14]++;
+                    incrementInterrupt(i+14);
                 }
             }
             else
-                interrupt_counts[i+14]++;
+                incrementInterrupt(i+14);
             PORTA_ISFR &= (1<<pins[i]);
         }
     }
@@ -573,11 +581,11 @@ void portE_isr()
                 if(TimeNowMSec() - interrupt_time[i+25] > 10)
                 {
                     interrupt_time[i+25] = TimeNowMSec();
-                    interrupt_counts[i+25]++;
+                    incrementInterrupt(i+25);
                 }
             }
             else
-                interrupt_counts[i+25]++;
+                incrementInterrupt(i+25);
             PORTE_ISFR &= (1<<pins[i]);
         }
     }
@@ -586,6 +594,13 @@ void portE_isr()
 int DigitalEncoder::Counts()
 {
     return interrupt_counts[_pin];
+}
+
+bool DigitalEncoder::NewCount()
+{
+    bool val = new_interrupt[_pin];
+    new_interrupt[_pin] = false;
+    return val;
 }
 
 void DigitalEncoder::ResetCounts()

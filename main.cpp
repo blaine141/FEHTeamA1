@@ -18,14 +18,22 @@ DigitalEncoder backLeftEncoder(FEHIO::P2_4, FEHIO::EitherEdge);
 DigitalEncoder backRightEncoder(FEHIO::P2_6, FEHIO::EitherEdge);
 #define MOTOR_POWER 50.0
 #define PI 3.1415926536
+
+float min(float a, float b)
+{
+    if(a>b)
+        return b;
+    return a;
+}
+
 void buttonDecision(int direction);
 void performanceTestOne(float light);
 void setFrontLeftSpeed(float speed)
 {
     if(speed>0)
-        frontLeft.SetPercent((speed*4 + 9.4719) / 2.6932);
+        frontLeft.SetPercent((speed*4 + 9.4719) / 2.6);
     else if(speed < 0)
-        frontLeft.SetPercent((speed*4 + 8.7879) / 2.6062);
+        frontLeft.SetPercent((speed*4 + 8.7879) / 2.6);
     else
         frontLeft.Stop();
 }
@@ -33,9 +41,9 @@ void setFrontLeftSpeed(float speed)
 void setFrontRightSpeed(float speed)
 {
     if(speed>0)
-        frontRight.SetPercent((speed*4 + 14.368) / 2.6083);
+        frontRight.SetPercent((speed*4 + 14.368) / 2.6);
     else if(speed < 0)
-        frontRight.SetPercent((speed*4 + 13.645) / 2.4834);
+        frontRight.SetPercent((speed*4 + 13.645) / 2.6);
     else
         frontRight.Stop();
 }
@@ -43,9 +51,9 @@ void setFrontRightSpeed(float speed)
 void setBackLeftSpeed(float speed)
 {
     if(speed>0)
-        backLeft.SetPercent((speed*4 + 14.113) / 2.6842);
+        backLeft.SetPercent((speed*4 + 14.113) / 2.65);
     else if(speed < 0)
-        backLeft.SetPercent((speed*4 + 12.346) / 2.6488);
+        backLeft.SetPercent((speed*4 + 12.346) / 2.65);
     else
         backLeft.Stop();
 }
@@ -53,9 +61,9 @@ void setBackLeftSpeed(float speed)
 void setBackRightSpeed(float speed)
 {
     if(speed>0)
-        backRight.SetPercent((speed*4 + 10.498) / 2.5681);
+        backRight.SetPercent((speed*4 + 10.498) / 2.53);
     else if(speed < 0)
-        backRight.SetPercent((speed*4 + 9.2121) / 2.4795);
+        backRight.SetPercent((speed*4 + 9.2121) / 2.53);
     else
         backRight.Stop();
 }
@@ -72,7 +80,7 @@ void driveLeftFour(int counts, float power);
 float driveLeftFourCdSCell(int counts, float power);
 void driveRightFour(int counts, float power);
 void driveBackwardFour(int counts, float power);
-int main(void)
+int main()
 {
     float light = 3.3;
     float speed;
@@ -82,6 +90,32 @@ int main(void)
     int direction = 1;
 
     float minCdSCellValue = 3.3;
+
+
+   drivePolar(10,36,70);
+   Sleep(.5);
+   drivePolar(170,36,70);
+   Sleep(.5);
+   drivePolar(270,12.5,70);
+
+
+    while(true)
+    {
+        frontLeftEncoder.ResetCounts();
+        frontRightEncoder.ResetCounts();
+        backLeftEncoder.ResetCounts();
+        backRightEncoder.ResetCounts();
+
+        Sleep(1000);
+
+        LCD.WriteAt(frontLeftEncoder.Counts(),0,0);
+        LCD.WriteAt(frontRightEncoder.Counts(),0,20);
+        LCD.WriteAt(backLeftEncoder.Counts(),0,40);
+        LCD.WriteAt(backRightEncoder.Counts(),0,60);
+
+    }
+
+    return 0;
 
     //Wait for light
     while(light > 2.7)
@@ -122,44 +156,92 @@ void drivePolar(float angle, float distance, float percent)
     backLeftEncoder.ResetCounts();
     backRightEncoder.ResetCounts();
 
-    float FL = cos(angle*PI/180) - sin(angle*PI/180);
-    float FR = cos(angle*PI/180) + sin(angle*PI/180);
-    float BL = cos(angle*PI/180) + sin(angle*PI/180);
-    float BR = cos(angle*PI/180) - sin(angle*PI/180);
+    angle+=45;
+    distance = distance * 500 / 81;
+    percent = percent / 2;
 
-    float distanceFactor = distance/((abs(FL)+abs(FR))/2);
+    float XSpeed = cos(angle*PI/180)* percent;
+    float YSpeed = sin(angle*PI/180)* percent;
+
+    float XPos = 0;
+    float YPos = 0;
+
+    float XEnd = cos(angle*PI/180)* distance;
+    float YEnd = sin(angle*PI/180)* distance;
+
+
+    float p = 3;
+
     bool doneDriving = false;
 
-    while(!doneDriving)
+    setFrontRightSpeed(-YSpeed);
+    setBackLeftSpeed(-YSpeed);
+    setFrontLeftSpeed(-XSpeed);
+    setBackRightSpeed(-XSpeed);
+
+    double start = TimeNow();
+
+    while(abs(YPos) < abs(YEnd) || abs(XPos) < abs(XEnd))
     {
-        LCD.WriteAt(frontLeftEncoder.Counts(),0,0);
-        LCD.WriteAt(frontRightEncoder.Counts(),0,40);
-        LCD.WriteAt(frontLeftEncoder.Counts(),0,0);
-        LCD.WriteAt(frontRightEncoder.Counts(),0,40);
-        doneDriving = true;
-        if(frontRightEncoder.Counts() + backLeftEncoder.Counts() < abs(FR*distanceFactor*2))
+        float XPredicted = XSpeed*(TimeNow()-start);
+        float YPredicted = YSpeed*(TimeNow()-start);
+
+        if(frontRightEncoder.NewCount() || backLeftEncoder.NewCount())
         {
-            frontRight.SetPercent(-percent* FR);
-            backLeft.SetPercent(-percent* BL);
-            doneDriving = false;
+            if(YSpeed>=0)
+            {
+                YPos += .5;
+            }
+            else
+            {
+                YPos -= .5;
+            }
         }
-        else
+
+        if(abs(YPos) >= abs(YEnd))
         {
             frontRight.Stop();
             backLeft.Stop();
         }
-        if(frontLeftEncoder.Counts() + backRightEncoder.Counts() < abs(BR*distanceFactor*2))
-        {
-            frontLeft.SetPercent(-percent* FL);
-            backRight.SetPercent(-percent* BR);
-            doneDriving = false;
-        }
         else
+        {
+            float YError = YPredicted - YPos;
+            float SlowdownFactor = min(1,.2+.08*(abs(YEnd)-abs(YPos)));
+
+            setFrontRightSpeed(-YSpeed * SlowdownFactor - p * YError);
+            setBackLeftSpeed(-YSpeed * SlowdownFactor - p * YError);
+        }
+
+        if(frontLeftEncoder.NewCount() || backRightEncoder.NewCount())
+        {
+            if(XSpeed>=0)
+            {
+                XPos += .5;
+            }
+            else
+            {
+                XPos -= .5;
+            }
+        }
+
+        if(abs(XPos) >= abs(XEnd))
         {
             frontLeft.Stop();
             backRight.Stop();
         }
+        else
+        {
+            float XError = XPredicted - XPos;
+            float SlowdownFactor = min(1,.2+.08*(abs(XEnd)-abs(XPos)));
+
+            setFrontLeftSpeed(-XSpeed * SlowdownFactor - p * XError);
+            setBackRightSpeed(-XSpeed * SlowdownFactor - p * XError);
+        }
     }
+    LCD.WriteAt(frontRightEncoder.Counts(),0,0);
+    LCD.WriteAt(frontLeftEncoder.Counts(),0,40);
+    LCD.WriteAt(backRightEncoder.Counts(),0,80);
+    LCD.WriteAt(backLeftEncoder.Counts(),0,120);
 }
 
 void driveForwardTwo(int counts, float power)

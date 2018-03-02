@@ -1,4 +1,5 @@
-Startup\__arm_end.d: Startup\__arm_end.cpp \
+..\fehproteusfirmware/Startup/__arm_end.d: \
+ ..\fehproteusfirmware/Startup/__arm_end.cpp \
  C:\fehqt\Proteus/EWL/EWL_C++/include/lib_ewl_c++.prefix \
  C:\fehqt\Proteus/EWL/EWL_C/include/lib_ewl.prefix \
  C:\fehqt\Proteus/EWL/EWL_C/include/common.prefix \

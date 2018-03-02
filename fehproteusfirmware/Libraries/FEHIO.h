@@ -122,6 +122,7 @@ public:
     DigitalEncoder( FEHIO::FEHIOPin pin);
     int Counts();
     void ResetCounts();
+    bool NewCount();
 
 private:
     FEHIO::FEHIOPin _pin;

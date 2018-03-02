@@ -1,4 +1,4 @@
-TARGET = PerformanceTest1
+TARGET = FEHTeamA1
 
 GITBINARY := git
 FEHURL := google.com
