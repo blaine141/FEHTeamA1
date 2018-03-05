@@ -11,6 +11,7 @@ FEHMotor frontLeft(FEHMotor::Motor0,5.0);
 FEHMotor frontRight(FEHMotor::Motor1,5.0);
 FEHMotor backLeft(FEHMotor::Motor2,5.0);
 FEHMotor backRight(FEHMotor::Motor3,5.0);
+FEHServo bicep(FEHServo::Servo0);
 AnalogInputPin CdS_Cell(FEHIO::P0_0);
 DigitalEncoder frontLeftEncoder(FEHIO::P2_0, FEHIO::EitherEdge);
 DigitalEncoder frontRightEncoder(FEHIO::P2_2, FEHIO::EitherEdge);
@@ -18,7 +19,9 @@ DigitalEncoder backLeftEncoder(FEHIO::P2_4, FEHIO::EitherEdge);
 DigitalEncoder backRightEncoder(FEHIO::P2_6, FEHIO::EitherEdge);
 #define MOTOR_POWER 50.0
 #define PI 3.1415926536
+\
 
+void performanceTestTwo();
 float min(float a, float b)
 {
     if(a>b)
@@ -27,7 +30,7 @@ float min(float a, float b)
 }
 
 void buttonDecision(int direction);
-void performanceTestOne(float light);
+void performanceTestOne();
 void setFrontLeftSpeed(float speed)
 {
     if(speed>0)
@@ -82,17 +85,7 @@ void driveRightFour(int counts, float power);
 void driveBackwardFour(int counts, float power);
 int main()
 {
-    float light = 3.3;
-    float speed;
-    int frontLeftClicks = 0, frontRightClicks = 0, backRightClicks = 0, backLeftClicks = 0;
-
-
-    int direction = 1;
-
-    float minCdSCellValue = 3.3;
-
-
-   drivePolar(10,36,70);
+  /* drivePolar(10,36,70);
    Sleep(.5);
    drivePolar(170,36,70);
    Sleep(.5);
@@ -115,39 +108,51 @@ int main()
 
     }
 
-    return 0;
-
+    return 0;*/
+    bicep.TouchCalibrate();
+    float light = 3.3;
+    float speed;
+    int frontLeftClicks = 0, frontRightClicks = 0, backRightClicks = 0, backLeftClicks = 0;
+    int direction = 1;
+    float minCdSCellValue = 3.3;
     //Wait for light
     while(light > 2.7)
     {
         light = CdS_Cell.Value();
     }
     //Leave starting area
-    driveForwardFour(34, MOTOR_POWER);
+    drivePolar(0, 8.0, MOTOR_POWER);
     Sleep(500);
-    turnCounterClockwise((0.05));
-    //Go towards button board, but go past and go to wall, reaading CdS cell values along the way
-    minCdSCellValue = driveLeftFourCdSCell(70,MOTOR_POWER);
-
-    LCD.WriteAt(minCdSCellValue,0,20);
-    if(minCdSCellValue>=0.6)
-    {
-        direction=0;
-    }
+    //Turn towards wrench
+    turnClockwise(1.0);
     Sleep(500);
-    //Drive back to button board
-    driveRightFour(10,MOTOR_POWER);
-    driveBackwardFour(5,MOTOR_POWER);
-    driveRightFour(10, MOTOR_POWER);
-    //Choose a button and drive to it
-    buttonDecision(direction);
-    //Drive into wrench
-    driveRightFour(90,MOTOR_POWER);
-    //Drive towards starting/ending area
-    driveLeftFour(50,MOTOR_POWER);
-    //Drive into the ending button
-    driveBackwardFour(50,MOTOR_POWER);
-    return 0;
+    //Drive to wtrench
+    drivePolar(0, 8.0, MOTOR_POWER);
+    Sleep(500);
+    //Pick up wrench
+    bicep.SetDegree(100);
+    Sleep(500);
+    //turn towards ramp
+    turnClockwise(1.0);
+    Sleep(500);
+    //drive towards ramp (little jog in the middle)
+    drivePolar(0,6.0,MOTOR_POWER);
+    drivePolar(90,3.0,MOTOR_POWER);
+    Sleep(500);
+    //drive up ramp
+    drivePolar(0,21.0,MOTOR_POWER);
+    Sleep(500);
+    //drive polar to garage
+    drivePolar(350.0,20.0,MOTOR_POWER);
+    //turn to face garage
+    turnCounterClockwise(0.5);
+    //drive into garage and deposit wrench
+    //back up just a tad bit
+    driveForwardFour(10,MOTOR_POWER);
+    bicep.SetDegree(10.);
+    driveBackwardFour(10,MOTOR_POWER);
+    //drive polar into the spinny thing
+    drivePolar(240.0,20.0,MOTOR_POWER);
 }
 void drivePolar(float angle, float distance, float percent)
 {
@@ -413,8 +418,9 @@ void driveLeftFour(int counts, float power)
     backLeft.Stop();
     backRight.Stop();
 }
-void performanceTestOne(float light)
+void performanceTestOne()
 {
+    float light = 3.3;
     while(light > 2.7)
     {
         light = CdS_Cell.Value();
@@ -503,4 +509,51 @@ float driveLeftFourCdSCell(int counts, float power)
     backLeft.Stop();
     backRight.Stop();
     return minCdSCellValue;
+}
+void performanceTestTwo()
+{
+    float light = 3.3;
+    float speed;
+    int frontLeftClicks = 0, frontRightClicks = 0, backRightClicks = 0, backLeftClicks = 0;
+
+
+    int direction = 1;
+
+    float minCdSCellValue = 3.3;
+
+
+
+    //Wait for light
+    while(light > 2.7)
+    {
+        light = CdS_Cell.Value();
+    }
+    //Leave starting area
+    drivePolar(0, 8.0, MOTOR_POWER);
+    Sleep(500);
+
+    //Go towards button board, but go past and go to wall, reaading CdS cell values along the way
+
+    minCdSCellValue = driveLeftFourCdSCell(70,MOTOR_POWER);
+
+    LCD.WriteAt(minCdSCellValue,0,20);
+    if(minCdSCellValue>=.6)
+    {
+        direction=0;
+    }
+    Sleep(500);
+    //Drive back to button board
+    driveRightFour(10,MOTOR_POWER);
+    driveBackwardFour(5,MOTOR_POWER);
+    driveRightFour(10, MOTOR_POWER);
+    Sleep(500);
+    //Choose a button and drive to it
+    buttonDecision(direction);
+    //Drive into wrench
+    driveRightFour(90,MOTOR_POWER);
+    //Drive towards starting/ending area
+    driveLeftFour(50,MOTOR_POWER);
+    //Drive into the ending button
+    driveBackwardFour(50,MOTOR_POWER);
+    return 0;
 }
