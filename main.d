@@ -19,7 +19,7 @@
  O:\fehqt\Proteus/EWL/EWL_C/include/cstdarg \
  O:\fehqt\Proteus/EWL/EWL_C/include/va_list.h \
  O:\fehqt\Proteus/EWL/EWL_C/include/arm/stdarg.ARM.h Drivers/ffconf.h \
- Drivers/ffconf.h Drivers/diskio.h \
+ Drivers/ffconf.h Drivers/diskio.h Libraries/FEHServo.h \
  O:\fehqt\Proteus/EWL/EWL_C/include/math.h \
  O:\fehqt\Proteus/EWL/EWL_C/include/cmath \
  O:\fehqt\Proteus/EWL/EWL_C/include/cfloat \
@@ -98,6 +98,8 @@ Drivers/ffconf.h:
 Drivers/ffconf.h:
 
 Drivers/diskio.h:
+
+Libraries/FEHServo.h:
 
 O:\fehqt\Proteus/EWL/EWL_C/include/math.h:
 

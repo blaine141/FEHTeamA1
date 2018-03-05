@@ -3,6 +3,7 @@
 #include <FEHIO.h>
 #include <FEHmotor.h>
 #include <FEHSD.h>
+#include <FEHServo.h>
 #include <math.h>
 
 
@@ -17,9 +18,8 @@ DigitalEncoder frontLeftEncoder(FEHIO::P2_0, FEHIO::EitherEdge);
 DigitalEncoder frontRightEncoder(FEHIO::P2_2, FEHIO::EitherEdge);
 DigitalEncoder backLeftEncoder(FEHIO::P2_4, FEHIO::EitherEdge);
 DigitalEncoder backRightEncoder(FEHIO::P2_6, FEHIO::EitherEdge);
-#define MOTOR_POWER 50.0
+#define MOTOR_SPEED 50.0
 #define PI 3.1415926536
-\
 
 void performanceTestTwo();
 float min(float a, float b)
@@ -72,17 +72,12 @@ void setBackRightSpeed(float speed)
 }
 
 void drivePolar(float angle, float distance, float percent);
-void driveForwardTwo(int counts, float power);
-void driveLeftTwo(int counts, float power);
-void driveRightTwo(int counts, float power);
-void driveBackwardTwo(int counts, float power);
-void turnCounterClockwise(float sec);
-void turnClockwise(float sec);
-void driveForwardFour(int counts, float power);
-void driveLeftFour(int counts, float power);
+void turnCC(float degrees);
+void turnC(float degrees);
 float driveLeftFourCdSCell(int counts, float power);
-void driveRightFour(int counts, float power);
-void driveBackwardFour(int counts, float power);
+void bicepStretch();
+void bicepFlex();
+
 int main()
 {
   /* drivePolar(10,36,70);
@@ -109,7 +104,9 @@ int main()
     }
 
     return 0;*/
-    bicep.TouchCalibrate();
+    bicep.SetMin(1211);
+    bicep.SetMax(2340);
+
     float light = 3.3;
     float speed;
     int frontLeftClicks = 0, frontRightClicks = 0, backRightClicks = 0, backLeftClicks = 0;
@@ -121,39 +118,47 @@ int main()
         light = CdS_Cell.Value();
     }
     //Leave starting area
-    drivePolar(0, 8.0, MOTOR_POWER);
+    drivePolar(90, 13.5, MOTOR_SPEED);
     Sleep(500);
+
+    bicepStretch();
     //Turn towards wrench
-    turnClockwise(1.0);
+    drivePolar(0, 10, MOTOR_SPEED);
     Sleep(500);
+    bicepFlex();
+    drivePolar(180,1,MOTOR_SPEED);
+
     //Drive to wtrench
-    drivePolar(0, 8.0, MOTOR_POWER);
+    drivePolar(270, 5.5, MOTOR_SPEED);
     Sleep(500);
     //Pick up wrench
-    bicep.SetDegree(100);
+    drivePolar(0,5,MOTOR_SPEED);
     Sleep(500);
     //turn towards ramp
-    turnClockwise(1.0);
+    drivePolar(270, 25, MOTOR_SPEED);
     Sleep(500);
     //drive towards ramp (little jog in the middle)
-    drivePolar(0,6.0,MOTOR_POWER);
-    drivePolar(90,3.0,MOTOR_POWER);
+    turnC(45);
     Sleep(500);
     //drive up ramp
-    drivePolar(0,21.0,MOTOR_POWER);
+    drivePolar(300,19,MOTOR_SPEED);
     Sleep(500);
     //drive polar to garage
-    drivePolar(350.0,20.0,MOTOR_POWER);
-    //turn to face garage
-    turnCounterClockwise(0.5);
-    //drive into garage and deposit wrench
-    //back up just a tad bit
-    driveForwardFour(10,MOTOR_POWER);
-    bicep.SetDegree(10.);
-    driveBackwardFour(10,MOTOR_POWER);
-    //drive polar into the spinny thing
-    drivePolar(240.0,20.0,MOTOR_POWER);
+    drivePolar(225.0,17,MOTOR_SPEED);
+    return 0;
 }
+
+void bicepStretch()
+{
+    bicep.SetDegree(151);
+}
+
+void bicepFlex()
+{
+    bicep.SetDegree(0);
+}
+
+
 void drivePolar(float angle, float distance, float percent)
 {
     frontRightEncoder.ResetCounts();
@@ -168,8 +173,6 @@ void drivePolar(float angle, float distance, float percent)
     float XSpeed = cos(angle*PI/180)* percent;
     float YSpeed = sin(angle*PI/180)* percent;
 
-    float XPos = 0;
-    float YPos = 0;
 
     float XEnd = cos(angle*PI/180)* distance;
     float YEnd = sin(angle*PI/180)* distance;
@@ -186,239 +189,108 @@ void drivePolar(float angle, float distance, float percent)
 
     double start = TimeNow();
 
-    while(abs(YPos) < abs(YEnd) || abs(XPos) < abs(XEnd))
+    while(backLeftEncoder.Counts() < abs(YEnd) || backRightEncoder.Counts() < abs(XEnd))
     {
         float XPredicted = XSpeed*(TimeNow()-start);
         float YPredicted = YSpeed*(TimeNow()-start);
 
-        if(frontRightEncoder.NewCount() || backLeftEncoder.NewCount())
-        {
-            if(YSpeed>=0)
-            {
-                YPos += .5;
-            }
-            else
-            {
-                YPos -= .5;
-            }
-        }
 
-        if(abs(YPos) >= abs(YEnd))
+        if(backLeftEncoder.Counts() >= abs(YEnd))
         {
             frontRight.Stop();
             backLeft.Stop();
         }
         else
         {
-            float YError = YPredicted - YPos;
-            float SlowdownFactor = min(1,.2+.08*(abs(YEnd)-abs(YPos)));
+            float YError = YPredicted - backLeftEncoder.Counts();
+            float SlowdownFactor = min(1,.2+.08*(abs(YEnd)-backLeftEncoder.Counts()));
 
-            setFrontRightSpeed(-YSpeed * SlowdownFactor - p * YError);
             setBackLeftSpeed(-YSpeed * SlowdownFactor - p * YError);
         }
 
-        if(frontLeftEncoder.NewCount() || backRightEncoder.NewCount())
+        if(frontRightEncoder.Counts() >= abs(YEnd))
         {
-            if(XSpeed>=0)
-            {
-                XPos += .5;
-            }
-            else
-            {
-                XPos -= .5;
-            }
-        }
-
-        if(abs(XPos) >= abs(XEnd))
-        {
-            frontLeft.Stop();
-            backRight.Stop();
+            frontRight.Stop();
+            backLeft.Stop();
         }
         else
         {
-            float XError = XPredicted - XPos;
-            float SlowdownFactor = min(1,.2+.08*(abs(XEnd)-abs(XPos)));
+            float YError = YPredicted - frontRightEncoder.Counts();
+            float SlowdownFactor = min(1,.2+.08*(abs(YEnd)-frontRightEncoder.Counts()));
 
-            setFrontLeftSpeed(-XSpeed * SlowdownFactor - p * XError);
-            setBackRightSpeed(-XSpeed * SlowdownFactor - p * XError);
+            setFrontRightSpeed(-YSpeed * SlowdownFactor - p * YError);
+        }
+
+
+        if(backRightEncoder.Counts() >= abs(YEnd))
+        {
+            frontRight.Stop();
+            backLeft.Stop();
+        }
+        else
+        {
+            float YError = YPredicted - backRightEncoder.Counts();
+            float SlowdownFactor = min(1,.2+.08*(abs(YEnd)-backRightEncoder.Counts()));
+
+            setBackRightSpeed(-YSpeed * SlowdownFactor - p * YError);
+        }
+
+        if(frontLeftEncoder.Counts() >= abs(YEnd))
+        {
+            frontRight.Stop();
+            backLeft.Stop();
+        }
+        else
+        {
+            float YError = YPredicted - frontLeftEncoder.Counts();
+            float SlowdownFactor = min(1,.2+.08*(abs(YEnd)-frontLeftEncoder.Counts()));
+
+            setFrontLeftSpeed(-YSpeed * SlowdownFactor - p * YError);
         }
     }
-    LCD.WriteAt(frontRightEncoder.Counts(),0,0);
-    LCD.WriteAt(frontLeftEncoder.Counts(),0,40);
-    LCD.WriteAt(backRightEncoder.Counts(),0,80);
-    LCD.WriteAt(backLeftEncoder.Counts(),0,120);
+    frontLeft.Stop();
+    frontRight.Stop();
+    backLeft.Stop();
+    backRight.Stop();
 }
 
-void driveForwardTwo(int counts, float power)
+
+void turnCC(float degrees)
 {
-    int sumClicks = 0;
+    int counts = degrees / 2.025;
     frontRightEncoder.ResetCounts();
     frontLeftEncoder.ResetCounts();
     backLeftEncoder.ResetCounts();
     backRightEncoder.ResetCounts();
-    frontRight.SetPercent(-1*power);
-    backLeft.SetPercent(-1*power);
-    while( sumClicks < 2*counts)
-    {
-        sumClicks = frontRightEncoder.Counts() + backLeftEncoder.Counts();
-    }
-    frontRight.Stop();
-    backLeft.Stop();
-}
-void driveLeftTwo(int counts, float power)
-{
-    int sumClicks = 0;
-    frontRightEncoder.ResetCounts();
-    frontLeftEncoder.ResetCounts();
-    backLeftEncoder.ResetCounts();
-    backRightEncoder.ResetCounts();
-    frontLeft.SetPercent(power);
-    backRight.SetPercent(power);
-    while( sumClicks < 2*counts)
-    {
-        sumClicks = frontLeftEncoder.Counts() + backRightEncoder.Counts();
-    }
-    frontLeft.Stop();
-    backRight.Stop();
-}
-void driveRightTwo(int counts, float power)
-{
-    int sumClicks = 0;
-    frontRightEncoder.ResetCounts();
-    frontLeftEncoder.ResetCounts();
-    backLeftEncoder.ResetCounts();
-    backRightEncoder.ResetCounts();
-    frontLeft.SetPercent(-1*power);
-    backRight.SetPercent(-1*power);
-    while( sumClicks < 2*counts)
-    {
-        sumClicks = frontLeftEncoder.Counts() + backRightEncoder.Counts();
-    }
-    frontLeft.Stop();
-    backRight.Stop();
-}
-void driveBackwardTwo(int counts, float power)
-{
-    int sumClicks = 0;
-    frontRightEncoder.ResetCounts();
-    frontLeftEncoder.ResetCounts();
-    backLeftEncoder.ResetCounts();
-    backRightEncoder.ResetCounts();
-    frontRight.SetPercent(power);
-    backLeft.SetPercent(power);
-    while( sumClicks < 2*counts)
-    {
-        sumClicks = frontRightEncoder.Counts() + backLeftEncoder.Counts();
-    }
-    frontRight.Stop();
-    backLeft.Stop();
-}
-void turnCounterClockwise(float sec)
-{
     frontLeft.SetPercent(50.);
     frontRight.SetPercent(-50.);
     backRight.SetPercent(-50.);
     backLeft.SetPercent(50.);
-    Sleep(sec);
+    while(frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts() < counts*4) {}
     frontLeft.Stop();
     frontRight.Stop();
     backLeft.Stop();
     backRight.Stop();
 
 }
-void turnClockwise(float sec)
+void turnC(float degrees)
 {
+    int counts = degrees / 2.025;
+    frontRightEncoder.ResetCounts();
+    frontLeftEncoder.ResetCounts();
+    backLeftEncoder.ResetCounts();
+    backRightEncoder.ResetCounts();
     frontLeft.SetPercent(-50.);
     frontRight.SetPercent(50.);
     backRight.SetPercent(50.);
     backLeft.SetPercent(-50.);
-    Sleep(sec);
+    while(frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts() < counts*4) {}
     frontLeft.Stop();
     frontRight.Stop();
     backLeft.Stop();
     backRight.Stop();
 }
-void driveBackwardFour(int counts, float power)
-{
-    int sumClicks = 0;
-    frontRightEncoder.ResetCounts();
-    frontLeftEncoder.ResetCounts();
-    backLeftEncoder.ResetCounts();
-    backRightEncoder.ResetCounts();
-    frontLeft.SetPercent(power);
-    frontRight.SetPercent(power);
-    backRight.SetPercent(power);
-    backLeft.SetPercent(power);
-    while( sumClicks < 4*counts)
-    {
-        sumClicks = frontLeftEncoder.Counts() +frontRightEncoder.Counts() + backRightEncoder.Counts() + backLeftEncoder.Counts();
-    }
-    frontLeft.Stop();
-    frontRight.Stop();
-    backLeft.Stop();
-    backRight.Stop();
-}
-void driveForwardFour(int counts, float power)
-{
-    int sumClicks = 0;
-    frontRightEncoder.ResetCounts();
-    frontLeftEncoder.ResetCounts();
-    backLeftEncoder.ResetCounts();
-    backRightEncoder.ResetCounts();
-    frontLeft.SetPercent(-1*power);
-    frontRight.SetPercent(-1*power);
-    backRight.SetPercent(-1*power);
-    backLeft.SetPercent(-1*power);
-    while( sumClicks < 4*counts)
-    {
-        sumClicks = frontLeftEncoder.Counts() +frontRightEncoder.Counts() + backRightEncoder.Counts() + backLeftEncoder.Counts();
-    }
-    frontLeft.Stop();
-    frontRight.Stop();
-    backLeft.Stop();
-    backRight.Stop();
-}
-void driveRightFour(int counts, float power)
-{
-    int sumClicks = 0;
-    frontRightEncoder.ResetCounts();
-    frontLeftEncoder.ResetCounts();
-    backLeftEncoder.ResetCounts();
-    backRightEncoder.ResetCounts();
-    frontLeft.SetPercent(-1*power);
-    frontRight.SetPercent(power);
-    backRight.SetPercent(-1*power);
-    backLeft.SetPercent(power);
-    while( sumClicks < 4*counts)
-    {
-        sumClicks = frontLeftEncoder.Counts() +frontRightEncoder.Counts() + backRightEncoder.Counts() + backLeftEncoder.Counts();
-    }
-    frontLeft.Stop();
-    frontRight.Stop();
-    backLeft.Stop();
-    backRight.Stop();
-}
-void driveLeftFour(int counts, float power)
-{
-    int sumClicks = 0;
-    frontRightEncoder.ResetCounts();
-    frontLeftEncoder.ResetCounts();
-    backLeftEncoder.ResetCounts();
-    backRightEncoder.ResetCounts();
-    frontLeft.SetPercent(power);
-    frontRight.SetPercent(-1*power);
-    backRight.SetPercent(power);
-    backLeft.SetPercent(-1*power);
-    while( sumClicks < 4*counts)
-    {
-        sumClicks = frontLeftEncoder.Counts() +frontRightEncoder.Counts() + backRightEncoder.Counts() + backLeftEncoder.Counts();
-    }
-    frontLeft.Stop();
-    frontRight.Stop();
-    backLeft.Stop();
-    backRight.Stop();
-}
-void performanceTestOne()
+/*void performanceTestOne()
 {
     float light = 3.3;
     while(light > 2.7)
@@ -555,5 +427,4 @@ void performanceTestTwo()
     driveLeftFour(50,MOTOR_POWER);
     //Drive into the ending button
     driveBackwardFour(50,MOTOR_POWER);
-    return 0;
-}
+}*/
