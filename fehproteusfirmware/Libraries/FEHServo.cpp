@@ -16,7 +16,7 @@ FEHServo::FEHServo( FEHServoPort _servo )
     servo_max = 2500;
 
 	// _position == -1 => servo is off
-	_position = -1;
+        _position = -1;
 }
 
 void FEHServo::SetMin( int _min )
