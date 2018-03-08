@@ -84,32 +84,10 @@ void driveUpHill(float percent);
 
 int main()
 {
-  /* drivePolar(10,36,70);
-   Sleep(.5);
-   drivePolar(170,36,70);
-   Sleep(.5);
-   drivePolar(270,12.5,70);
 
-
-    while(true)
-    {
-        frontLeftEncoder.ResetCounts();
-        frontRightEncoder.ResetCounts();
-        backLeftEncoder.ResetCounts();
-        backRightEncoder.ResetCounts();
-
-        Sleep(1000);
-
-        LCD.WriteAt(frontLeftEncoder.Counts(),0,0);
-        LCD.WriteAt(frontRightEncoder.Counts(),0,20);
-        LCD.WriteAt(backLeftEncoder.Counts(),0,40);
-        LCD.WriteAt(backRightEncoder.Counts(),0,60);
-
-    }
-
-    return 0;*/
     bicep.SetMin(1211);
     bicep.SetMax(2340);
+    bicepFlex();
 
     float light = 3.3;
     float speed;
@@ -125,34 +103,42 @@ int main()
     drivePolar(90, 13.5, MOTOR_SPEED);
     Sleep(500);
 
-    bicepFlex();
-
-    drivePolar(0, 1.5, MOTOR_SPEED);
+    drivePolar(0, 9, MOTOR_SPEED);
     Sleep(500);
 
-    drivePolar(90, 5, MOTOR_SPEED);
+    drivePolar(90, 18, MOTOR_SPEED);
     Sleep(500);
 
-    drivePolar(270, 4.5, MOTOR_SPEED);
+    drivePolar(180, 5, MOTOR_SPEED);
+    Sleep(500);
+
+    drivePolar(270, 10.5, MOTOR_SPEED);
+    Sleep(500);
+
+    drivePolar(180, 4, MOTOR_SPEED);
     Sleep(500);
 
     bicepStretch();
-    drivePolar(0, 7, MOTOR_SPEED);
-    Sleep(500);
+    drivePolar(0, 5.5, MOTOR_SPEED);
+    Sleep(200);
     bicepFlex();
+    Sleep(200);
     drivePolar(180,1,MOTOR_SPEED);
 
     drivePolar(270,5.5,MOTOR_SPEED);
     Sleep(500);
-    drivePolar(0,7,MOTOR_SPEED);
+    drivePolar(0,3,MOTOR_SPEED);
     Sleep(500);
-    driveUpHill(MOTOR_SPEED);
+    turnC(90);
+    drivePolar(90,1,MOTOR_SPEED);
     Sleep(500);
-    turnC(45);
+    driveUpHill(75);
     Sleep(500);
-    drivePolar(300,15,MOTOR_SPEED);
+    turnCC(45);
     Sleep(500);
-    drivePolar(0,7,MOTOR_SPEED);
+    drivePolar(280,17,MOTOR_SPEED);
+    Sleep(500);
+    drivePolar(0,9,MOTOR_SPEED);
     bicepStretch();
     Sleep(1000);
     drivePolar(180,7,MOTOR_SPEED);
@@ -163,7 +149,7 @@ int main()
 
 void bicepStretch()
 {
-    bicep.SetDegree(120);
+    bicep.SetDegree(110);
 }
 
 void bicepFlex()
@@ -292,8 +278,8 @@ void drivePolar(float angle, float distance, float percent)
 void driveUpHill(float percent)
 {
     percent = percent / 2;
-    float XSpeed = cos(315*PI/180)* percent;
-    float YSpeed = sin(315*PI/180)* percent;
+    float XSpeed = cos(45*PI/180)* percent;
+    float YSpeed = sin(45*PI/180)* percent;
 
     setFrontRightSpeed(-YSpeed);
     setBackLeftSpeed(-YSpeed);
@@ -301,14 +287,14 @@ void driveUpHill(float percent)
     setBackRightSpeed(-XSpeed);
 
     bool touchedHill = false;
-    while(!touchedHill || abs(Accel.X()) > .07)
+    while(!touchedHill || abs(Accel.Y()) > .07)
     {
-        if(abs(Accel.X()) >.1)
+        if(abs(Accel.Y()) >.1)
             touchedHill = true;
-        setFrontRightSpeed(-YSpeed * (1+2*abs(Accel.X())));
-        setBackLeftSpeed(-YSpeed * (1+2*abs(Accel.X())));
-        setFrontLeftSpeed(-XSpeed * (1+2*abs(Accel.X())));
-        setBackRightSpeed(-XSpeed * (1+2*abs(Accel.X())));
+        setFrontRightSpeed(-YSpeed * (1+2*abs(Accel.Y())));
+        setBackLeftSpeed(-YSpeed * (1+2*abs(Accel.Y())));
+        setFrontLeftSpeed(-XSpeed * (1+2*abs(Accel.Y())));
+        setBackRightSpeed(-XSpeed * (1+2*abs(Accel.Y())));
     }
 
 }
@@ -316,7 +302,7 @@ void driveUpHill(float percent)
 
 void turnCC(float degrees)
 {
-    int counts = degrees / 2.025;
+    int counts = degrees / 2.1;
     frontRightEncoder.ResetCounts();
     frontLeftEncoder.ResetCounts();
     backLeftEncoder.ResetCounts();
@@ -334,7 +320,7 @@ void turnCC(float degrees)
 }
 void turnC(float degrees)
 {
-    int counts = degrees / 2.025;
+    int counts = degrees / 2.1;
     frontRightEncoder.ResetCounts();
     frontLeftEncoder.ResetCounts();
     backLeftEncoder.ResetCounts();

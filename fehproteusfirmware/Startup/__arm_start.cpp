@@ -221,9 +221,7 @@ void InitFEHProteus()
 	Propeller.Initialize();
 
 	// Initialize LCD
-	LCD.Initialize();
-
-        Sleep(2000);
+        LCD.Initialize();
 
         ProteusStarted();
 }
