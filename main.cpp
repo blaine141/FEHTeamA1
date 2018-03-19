@@ -16,24 +16,16 @@ FEHMotor backRight(FEHMotor::Motor3,5.0);
 FEHServo bicep(FEHServo::Servo0);
 AnalogInputPin CdS_Cell(FEHIO::P0_0);
 DigitalEncoder frontLeftEncoder(FEHIO::P2_0, FEHIO::EitherEdge);
-DigitalEncoder frontRightEncoder(FEHIO::P2_2, FEHIO::EitherEdge);
-DigitalEncoder backLeftEncoder(FEHIO::P2_4, FEHIO::EitherEdge);
-DigitalEncoder backRightEncoder(FEHIO::P2_6, FEHIO::EitherEdge);
+DigitalEncoder frontRightEncoder(FEHIO::P2_1, FEHIO::EitherEdge);
+DigitalEncoder backLeftEncoder(FEHIO::P2_2, FEHIO::EitherEdge);
+DigitalEncoder backRightEncoder(FEHIO::P2_3, FEHIO::EitherEdge);
+I2C compass(FEHIO::P3_4,FEHIO::P3_4,0b0001101);
 #define MOTOR_SPEED 60.0
 #define PI 3.1415926536
 
-void performanceTestTwo();
-float min(float a, float b)
-{
-    if(a>b)
-        return b;
-    return a;
-}
 
 
 
-void buttonDecision(int direction);
-void performanceTestOne();
 void setFrontLeftSpeed(float speed)
 {
     if(speed>0)
@@ -74,11 +66,25 @@ void setBackRightSpeed(float speed)
         backRight.Stop();
 }
 
+int isPositive(int val)
+{
+    if (val > 0)
+        return 1;
+    return -1;
+}
+
+float min(float a, float b)
+{
+    if(a > b)
+        return b;
+    return a;
+}
+
 void drivePolar(float angle, float distance, float percent);
 void turnCC(float degrees);
 void turnC(float degrees);
-float driveLeftFourCdSCell(int counts, float power);
 void bicepStretch();
+void bicepHalfFlex();
 void bicepFlex();
 void driveUpHill(float percent);
 
@@ -94,6 +100,13 @@ int main()
     int frontLeftClicks = 0, frontRightClicks = 0, backRightClicks = 0, backLeftClicks = 0;
     int direction = 1;
     float minCdSCellValue = 3.3;
+
+    char data[] = {0x31,0b00001000};
+    if(compass.Write(data,2))
+    {
+        LCD.WriteAt("Compass working",0, 80);
+    }
+
     //Wait for light
     while(light > 2.7)
     {
@@ -147,9 +160,16 @@ int main()
     return 0;
 }
 
+#define STRETCH_POSITION 110
+
 void bicepStretch()
 {
-    bicep.SetDegree(110);
+    bicep.SetDegree(STRETCH_POSITION);
+}
+
+void bicepHalfFlex()
+{
+    bicep.SetDegree(STRETCH_POSITION / 2);
 }
 
 void bicepFlex()
@@ -160,14 +180,11 @@ void bicepFlex()
 
 void drivePolar(float angle, float distance, float percent)
 {
-    frontRightEncoder.ResetCounts();
-    frontLeftEncoder.ResetCounts();
-    backLeftEncoder.ResetCounts();
-    backRightEncoder.ResetCounts();
-
     angle+=45;
     distance = distance * 500 / 81;
     percent = percent / 2;
+
+    const int allowableError = 2;
 
     float XSpeed = cos(angle*PI/180)* percent;
     float YSpeed = sin(angle*PI/180)* percent;
@@ -180,93 +197,44 @@ void drivePolar(float angle, float distance, float percent)
     float XEnd = cos(angle*PI/180)* distance;
     float YEnd = sin(angle*PI/180)* distance;
 
-    float p = 3;
+    float FLPredicted = 0;
+    float FRPredicted = 0;
+    float BLPredicted = 0;
+    float BRPredicted = 0;
 
-    bool doneDriving = false;
+    float p = 5;
 
-    setFrontRightSpeed(-YSpeed);
-    setBackLeftSpeed(-YSpeed);
-    setFrontLeftSpeed(-XSpeed);
-    setBackRightSpeed(-XSpeed);
+    double lastTime = TimeNow();
 
-    double start = TimeNow();
-
-    while(abs(BLPos) < abs(YEnd) || abs(BRPos) < abs(XEnd))
+    while(abs((abs(BLPos) + abs(FRPos)) / 2 - YEnd) > allowableError || abs((abs(BRPos) + abs(FLPos)) / 2 - XEnd) > allowableError)
     {
-        float XPredicted = XSpeed*(TimeNow()-start);
-        float YPredicted = YSpeed*(TimeNow()-start);
-
         if(frontLeftEncoder.NewCount())
-        {
-            if(XSpeed > 0)
-                FLPos++;
-            else
-                FLPos--;
-        }
-
-        if(abs(FLPos) >= abs(XEnd))
-            frontLeft.Stop();
-        else
-        {
-            float XError = XPredicted - FLPos;
-            float SlowdownFactor = min(1,.2+.08*(abs(XEnd)-abs(FLPos)));
-
-            setFrontLeftSpeed(-XSpeed * SlowdownFactor - p * XError);
-        }
-
+            FLPos += isPositive(XSpeed);
         if(frontRightEncoder.NewCount())
-        {
-            if(YSpeed > 0)
-                FRPos++;
-            else
-                FRPos--;
-        }
-
-        if(abs(FRPos) >= abs(YEnd))
-            frontRight.Stop();
-        else
-        {
-            float YError = YPredicted - FRPos;
-            float SlowdownFactor = min(1,.2+.08*(abs(YEnd)-abs(FRPos)));
-
-            setFrontRightSpeed(-YSpeed * SlowdownFactor - p * YError);
-        }
-
+            FRPos += isPositive(YSpeed);
         if(backLeftEncoder.NewCount())
-        {
-            if(YSpeed > 0)
-                BLPos++;
-            else
-                BLPos--;
-        }
-
-        if(abs(BLPos) >= abs(YEnd))
-            backLeft.Stop();
-        else
-        {
-            float YError = YPredicted - BLPos;
-            float SlowdownFactor = min(1,.2+.08*(abs(YEnd)-abs(BLPos)));
-
-            setBackLeftSpeed(-YSpeed * SlowdownFactor - p * YError);
-        }
-
+            BLPos += isPositive(YSpeed);
         if(backRightEncoder.NewCount())
-        {
-            if(XSpeed > 0)
-                BRPos++;
-            else
-                BRPos--;
-        }
+            BRPos += isPositive(XSpeed);
 
-        if(abs(BRPos) >= abs(XEnd))
-            backRight.Stop();
-        else
-        {
-            float XError = XPredicted - BRPos;
-            float SlowdownFactor = min(1,.2+.08*(abs(XEnd)-abs(BRPos)));
 
-            setBackRightSpeed(-XSpeed * SlowdownFactor - p * XError);
-        }
+        double currentTime = TimeNow();
+
+        FLPredicted += XSpeed*(currentTime - lastTime);
+        FRPredicted += YSpeed*(currentTime - lastTime);
+        BLPredicted += YSpeed*(currentTime - lastTime);
+        BRPredicted += XSpeed*(currentTime - lastTime);
+
+        lastTime = currentTime;
+
+
+        float slowdownFactorY = min(abs((abs(BLPos) + abs(FRPos)) / 2 - YEnd) / 12,1);
+        float slowdownFactorX = min(abs((abs(BRPos) + abs(FLPos)) / 2 - XEnd) / 12,1);
+
+        setFrontLeftSpeed(XSpeed * slowdownFactorX + p * (FLPredicted - FLPos));
+        setFrontRightSpeed(YSpeed * slowdownFactorY + p * (FRPredicted - FRPos));
+        setBackLeftSpeed(YSpeed * slowdownFactorY + p * (BLPredicted - BLPos));
+        setBackRightSpeed(XSpeed * slowdownFactorX + p * (BRPredicted - BRPos));
     }
     frontLeft.Stop();
     frontRight.Stop();
@@ -335,6 +303,8 @@ void turnC(float degrees)
     backLeft.Stop();
     backRight.Stop();
 }
+
+
 /*void performanceTestOne()
 {
     float light = 3.3;

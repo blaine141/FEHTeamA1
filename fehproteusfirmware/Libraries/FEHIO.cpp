@@ -350,75 +350,119 @@ void DigitalIOPin::Write(bool value)
         Initialize(_pin,true);
 }
 
-
-DigitalIOPin Wireless::clkPin;
-DigitalIOPin Wireless::dataPin;
-static enum {IDLE, HAS_DATA, RECEIVING} lineState;
-char Wireless::charToSend;
-int Wireless::reg;
-int Wireless::val;
-int Wireless::regIndex;
-int Wireless::valIndex;
-void (*Wireless::regSubscriptions[256])(int);
-
-void Wireless::Initialize( FEHIO::FEHIOPin clk, FEHIO::FEHIOPin data)
+void I2C::Initialize( FEHIO::FEHIOPin clk, FEHIO::FEHIOPin data, char slaveAddress)
 {
-    clkPin = DigitalIOPin(clk,true,Wireless::Tick);
+    clkPin = DigitalIOPin(clk,false, 0);
     dataPin = DigitalIOPin(data,false,0);
-    reg = 0;
-    val = 0;
-    regIndex = 0;
-    valIndex = 0;
-    lineState = IDLE;
-    charToSend = 0;
+    this->slaveAddress = slaveAddress;
 }
-void Wireless::Subscribe(int reg, void(*func)(int))
-{
-    regSubscriptions[reg] = func;
-}
-void Wireless::Write(char* message)
-{
-    charToSend = 1;
-}
-void Wireless::Tick()
-{
-    if(lineState == IDLE)
-    {
-        if(charToSend)
-        {
-            dataPin.Write(true);
-        }
-        charToSend = 0;
-        lineState = RECEIVING;
-    }
-    else if (lineState == RECEIVING)
-    {
-        dataPin.Write(false);
-        if(regIndex != 8)
-        {
-           reg *=2;
-           if(!dataPin.Value())
-              reg +=1;
-           regIndex++;
-        }
-        else
-        {
-            val *=2;
-            if(!dataPin.Value())
-                val +=1;
-            valIndex++;
-        }
 
-        if(regIndex == 8 && valIndex == 8)
+bool I2C::Write(char* buffer, char length)
+{
+    dataPin.Write(false);
+
+    for(int i = 7; i>0;i--)
+    {
+        clkPin.Write(false);
+        dataPin.Write(slaveAddress & 2 << i);
+        clkPin.Write(true);
+    }
+    clkPin.Write(false);
+    dataPin.Write(false);
+    clkPin.Write(true);
+    clkPin.Write(false);
+    dataPin.Write(true);
+    clkPin.Write(true);
+    if(dataPin.Value())
+    {
+        clkPin.Write(false);
+        dataPin.Write(false);
+        clkPin.Write(true);
+        dataPin.Write(true);
+        return false;
+    }
+    for(int byte = 0; byte < length; byte++)
+    {
+        for(int i = 7; i>=0;i--)
         {
-            regIndex = 0;
-            valIndex = 0;
-            regSubscriptions[reg](val);
-            reg = 0;
-            val = 0;
-            lineState = IDLE;
+            clkPin.Write(false);
+            dataPin.Write(buffer[byte] & 2 << i);
+            clkPin.Write(true);
+        }
+        clkPin.Write(false);
+        dataPin.Write(true);
+        clkPin.Write(true);
+        if(dataPin.Value())
+        {
+            clkPin.Write(false);
+            dataPin.Write(false);
+            clkPin.Write(true);
+            dataPin.Write(true);
+            return false;
         }
     }
+    clkPin.Write(false);
+    dataPin.Write(false);
+    clkPin.Write(true);
+    dataPin.Write(true);
+    return true;
+}
+int I2C::Read(char address)
+{
+    if(!Write(&address, 1))
+        return -1;
+
+
+    dataPin.Write(false);
+
+    for(int i = 7; i>0;i--)
+    {
+        clkPin.Write(false);
+        dataPin.Write(slaveAddress & 2 << i);
+        clkPin.Write(true);
+    }
+    clkPin.Write(false);
+    dataPin.Write(true);
+    clkPin.Write(true);
+    clkPin.Write(false);
+    dataPin.Write(true);
+    clkPin.Write(true);
+    if(dataPin.Value())
+    {
+        clkPin.Write(false);
+        dataPin.Write(false);
+        clkPin.Write(true);
+        dataPin.Write(true);
+        return -1;
+    }
+    int result = 0;
+    for(int i = 7; i>=0;i--)
+    {
+        clkPin.Write(false);
+        dataPin.Write(true);
+        clkPin.Write(true);
+        if(dataPin.Value())
+            result += 1 < i;
+    }
+    clkPin.Write(false);
+    dataPin.Write(false);
+    clkPin.Write(true);
+    for(int i = 15; i>=8;i--)
+    {
+        clkPin.Write(false);
+        dataPin.Write(true);
+        clkPin.Write(true);
+        if(dataPin.Value())
+            result += 1 < i;
+    }
+    clkPin.Write(false);
+    dataPin.Write(true);
+    clkPin.Write(true);
+    clkPin.Write(false);
+    dataPin.Write(false);
+    clkPin.Write(true);
+    dataPin.Write(true);
+    return true;
 }
 
 
