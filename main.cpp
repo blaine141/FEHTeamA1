@@ -5,6 +5,7 @@
 #include <FEHSD.h>
 #include <FEHServo.h>
 #include <FEHAccel.h>
+#include <FEHBattery.h>
 #include <math.h>
 
 
@@ -79,6 +80,7 @@ void turnCC(float degrees);
 void turnC(float degrees);
 float driveLeftFourCdSCell(int counts, float power);
 void bicepStretch();
+void bicepHalfFlex();
 void bicepFlex();
 void driveUpHill(float percent);
 
@@ -94,6 +96,14 @@ int main()
     int frontLeftClicks = 0, frontRightClicks = 0, backRightClicks = 0, backLeftClicks = 0;
     int direction = 1;
     float minCdSCellValue = 3.3;
+
+    if(Battery.Voltage() < 11.0)
+    {
+        LCD.WriteAt("Charge Me!",0,0);
+        LCD.WriteAt(Battery.Voltage(),0,40);
+        return 0;
+    }
+
     //Wait for light
     while(light > 2.7)
     {
@@ -115,17 +125,18 @@ int main()
     drivePolar(270, 10.5, MOTOR_SPEED);
     Sleep(500);
 
-    drivePolar(180, 4, MOTOR_SPEED);
+    drivePolar(180, 5, MOTOR_SPEED);
     Sleep(500);
 
     bicepStretch();
     drivePolar(0, 5.5, MOTOR_SPEED);
     Sleep(200);
-    bicepFlex();
+    bicepHalfFlex();
     Sleep(200);
     drivePolar(180,1,MOTOR_SPEED);
 
     drivePolar(270,5.5,MOTOR_SPEED);
+    bicepFlex();
     Sleep(500);
     drivePolar(0,3,MOTOR_SPEED);
     Sleep(500);
@@ -136,9 +147,9 @@ int main()
     Sleep(500);
     turnCC(45);
     Sleep(500);
-    drivePolar(280,17,MOTOR_SPEED);
+    drivePolar(280,18,MOTOR_SPEED);
     Sleep(500);
-    drivePolar(0,9,MOTOR_SPEED);
+    drivePolar(0,11,MOTOR_SPEED);
     bicepStretch();
     Sleep(1000);
     drivePolar(180,7,MOTOR_SPEED);
@@ -147,9 +158,16 @@ int main()
     return 0;
 }
 
+#define STRETCH_POINT 110
+
 void bicepStretch()
 {
-    bicep.SetDegree(110);
+    bicep.SetDegree(STRETCH_POINT);
+}
+
+void bicepHalfFlex()
+{
+    bicep.SetDegree(STRETCH_POINT/2);
 }
 
 void bicepFlex()
