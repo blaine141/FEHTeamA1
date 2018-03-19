@@ -237,7 +237,7 @@ void drivePolar(float angle, float distance, float percent)
 
     double lastTime = TimeNow();
 
-    while(abs((abs(BLPos) + abs(FRPos)) / 2 - YEnd) > allowableError || abs((abs(BRPos) + abs(FLPos)) / 2 - XEnd) > allowableError)
+    while(abs((abs(BLPos) + abs(FRPos)) / 2 - abs(YEnd)) > allowableError || abs((abs(BRPos) + abs(FLPos)) / 2 - abs(XEnd)) > allowableError)
     {
         if(frontLeftEncoder.NewCount())
             FLPos += isPositive(XSpeed);
