@@ -96,22 +96,16 @@ private:
     void Initialize( FEHIO::FEHIOPin pin, bool input );
 };
 
-class Wireless
+class I2C
 {
 public:
-    static DigitalIOPin clkPin;
-    static DigitalIOPin dataPin;
-    static char charToSend;
-    static int reg;
-    static int val;
-    static int regIndex;
-    static int valIndex;
-    static void (*regSubscriptions[256])(int);
+    DigitalIOPin clkPin;
+    DigitalIOPin dataPin;
+    char slaveAddress;
 
-    static void Initialize( FEHIO::FEHIOPin clk, FEHIO::FEHIOPin data);
-    static void Subscribe(int reg, void(*func)(int));
-    static void Write(char* message);
-    static void Tick();
+    void Initialize( FEHIO::FEHIOPin clk, FEHIO::FEHIOPin data, char slaveAddress);
+    bool Write(char* buffer, char length);
+    int Read(char address);
 
 };
 

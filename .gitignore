@@ -1,1 +1,6 @@
 *.creator.user*
+*.elf
+*.s19
+*.o
+*.includes
+*.map
