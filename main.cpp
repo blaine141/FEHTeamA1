@@ -3,6 +3,7 @@
 #include <FEHIO.h>
 #include <FEHmotor.h>
 #include <FEHSD.h>
+#include <FEHRPS.h>
 #include <FEHServo.h>
 #include <FEHAccel.h>
 #include <FEHBattery.h>
@@ -20,7 +21,13 @@ DigitalEncoder frontLeftEncoder(FEHIO::P2_0, FEHIO::EitherEdge);
 DigitalEncoder frontRightEncoder(FEHIO::P2_1, FEHIO::EitherEdge);
 DigitalEncoder backLeftEncoder(FEHIO::P2_2, FEHIO::EitherEdge);
 DigitalEncoder backRightEncoder(FEHIO::P2_3, FEHIO::EitherEdge);
-I2C compass(FEHIO::P3_4,FEHIO::P3_4,0b0001101);
+//I2C compass(FEHIO::P3_4,FEHIO::P3_4,0b0001101);
+double curX = 0;
+double curY = 0;
+double curAngle = 0;
+
+
+
 #define MOTOR_SPEED 60.0
 #define PI 3.1415926536
 
@@ -82,6 +89,8 @@ float min(float a, float b)
 }
 
 void drivePolar(float angle, float distance, float percent);
+void driveToCoordinate(float x, float y, float percent);
+bool turnToAngle(float angle);
 void turnCC(float degrees);
 void turnC(float degrees);
 void bicepStretch();
@@ -97,10 +106,6 @@ int main()
     bicepFlex();
 
     float light = 3.3;
-    float speed;
-    int frontLeftClicks = 0, frontRightClicks = 0, backRightClicks = 0, backLeftClicks = 0;
-    int direction = 1;
-    float minCdSCellValue = 3.3;
 
     if(Battery.Voltage() < 11.0)
     {
@@ -108,6 +113,27 @@ int main()
         LCD.WriteAt(Battery.Voltage(),0,40);
         return 0;
 	}
+
+    RPS.InitializeTouchMenu();
+
+    Sleep(1000);
+
+
+    curAngle = RPS.Heading();
+
+    while(turnToAngle(180))
+    {
+        Sleep(1000);
+        curAngle = RPS.Heading();
+    }
+
+    LCD.WriteAt(curX,0,0);
+    LCD.WriteAt(curY,0,40);
+
+    curX = RPS.X();
+    curY = RPS.Y();
+
+    driveToCoordinate(18.7,28,MOTOR_SPEED);
 
     //Wait for light
     while(light > 2.7)
@@ -248,26 +274,70 @@ void drivePolar(float angle, float distance, float percent)
 }
 
 
+// 0 is by garage
+// 90 is wrench
+// 180 is car
+
+void driveToCoordinate(float x, float y, float percent)
+{
+    float angle = atan((y-curY)/(x-curX))*180/PI;
+    if(x-curX < 0)
+    {
+        angle += 180;
+    }
+
+    angle = angle - 90 + curAngle;
+
+    LCD.WriteAt(angle,0,80);
+
+    float distance = sqrt((y-curY)*(y-curY)+(x-curX)*(x-curX));
+
+    drivePolar(angle, distance, percent);
+
+    curX = x;
+    curY = y;
+}
+
+bool turnToAngle(float angle)
+{
+    float angleError = angle - curAngle;
+    if(angleError > 180)
+        angleError -= 360;
+    if(angleError < -180)
+        angleError += 360;
+    curAngle = angle;
+    LCD.WriteAt(angleError,0,0);
+    LCD.WriteAt(curAngle,0,40);
+    if(angleError > 2)
+        turnCC(angleError);
+    else if(angleError < -2)
+        turnC(-angleError);
+    else
+        return false;
+    return true;
+}
+
+
 void driveUpHill(float percent)
 {
     percent = percent / 2;
     float XSpeed = cos(45*PI/180)* percent;
     float YSpeed = sin(45*PI/180)* percent;
 
-    setFrontRightSpeed(-YSpeed);
-    setBackLeftSpeed(-YSpeed);
-    setFrontLeftSpeed(-XSpeed);
-    setBackRightSpeed(-XSpeed);
+    setFrontRightSpeed(YSpeed);
+    setBackLeftSpeed(YSpeed);
+    setFrontLeftSpeed(XSpeed);
+    setBackRightSpeed(XSpeed);
 
     bool touchedHill = false;
     while(!touchedHill || abs(Accel.Y()) > .07)
     {
         if(abs(Accel.Y()) >.1)
             touchedHill = true;
-        setFrontRightSpeed(-YSpeed * (1+2*abs(Accel.Y())));
-        setBackLeftSpeed(-YSpeed * (1+2*abs(Accel.Y())));
-        setFrontLeftSpeed(-XSpeed * (1+2*abs(Accel.Y())));
-        setBackRightSpeed(-XSpeed * (1+2*abs(Accel.Y())));
+        setFrontRightSpeed(YSpeed * (1+2*abs(Accel.Y())));
+        setBackLeftSpeed(YSpeed * (1+2*abs(Accel.Y())));
+        setFrontLeftSpeed(XSpeed * (1+2*abs(Accel.Y())));
+        setBackRightSpeed(XSpeed * (1+2*abs(Accel.Y())));
     }
 
 }
@@ -280,10 +350,10 @@ void turnCC(float degrees)
     frontLeftEncoder.ResetCounts();
     backLeftEncoder.ResetCounts();
     backRightEncoder.ResetCounts();
-    frontLeft.SetPercent(50.);
-    frontRight.SetPercent(-50.);
-    backRight.SetPercent(-50.);
-    backLeft.SetPercent(50.);
+    frontLeft.SetPercent(-50.);
+    frontRight.SetPercent(50.);
+    backRight.SetPercent(50.);
+    backLeft.SetPercent(-50.);
     while(frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts() < counts*4) {}
     frontLeft.Stop();
     frontRight.Stop();
@@ -298,10 +368,10 @@ void turnC(float degrees)
     frontLeftEncoder.ResetCounts();
     backLeftEncoder.ResetCounts();
     backRightEncoder.ResetCounts();
-    frontLeft.SetPercent(-50.);
-    frontRight.SetPercent(50.);
-    backRight.SetPercent(50.);
-    backLeft.SetPercent(-50.);
+    frontLeft.SetPercent(50.);
+    frontRight.SetPercent(-50.);
+    backRight.SetPercent(-50.);
+    backLeft.SetPercent(50.);
     while(frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts() < counts*4) {}
     frontLeft.Stop();
     frontRight.Stop();
