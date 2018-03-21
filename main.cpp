@@ -7,6 +7,7 @@
 #include <FEHAccel.h>
 #include <FEHBattery.h>
 #include <math.h>
+#include <FEHRPS.h>
 
 
 
@@ -15,12 +16,13 @@ FEHMotor frontRight(FEHMotor::Motor1,5.0);
 FEHMotor backLeft(FEHMotor::Motor2,5.0);
 FEHMotor backRight(FEHMotor::Motor3,5.0);
 FEHServo bicep(FEHServo::Servo0);
+FEHServo spin(FEHServo::Servo1);
 AnalogInputPin CdS_Cell(FEHIO::P0_0);
 DigitalEncoder frontLeftEncoder(FEHIO::P2_0, FEHIO::EitherEdge);
 DigitalEncoder frontRightEncoder(FEHIO::P2_1, FEHIO::EitherEdge);
 DigitalEncoder backLeftEncoder(FEHIO::P2_2, FEHIO::EitherEdge);
 DigitalEncoder backRightEncoder(FEHIO::P2_3, FEHIO::EitherEdge);
-I2C compass(FEHIO::P3_4,FEHIO::P3_4,0b0001101);
+//I2C compass(FEHIO::P3_4,FEHIO::P3_4,0b0001101);
 #define MOTOR_SPEED 60.0
 #define PI 3.1415926536
 
@@ -92,75 +94,36 @@ void driveUpHill(float percent);
 int main()
 {
 
-    bicep.SetMin(1211);
-    bicep.SetMax(2340);
-    bicepFlex();
-
+    RPS.InitializeTouchMenu();
+    spin.SetMin(512);
+    spin.SetMax(2389);
     float light = 3.3;
-    float speed;
-    int frontLeftClicks = 0, frontRightClicks = 0, backRightClicks = 0, backLeftClicks = 0;
-    int direction = 1;
-    float minCdSCellValue = 3.3;
-
-    if(Battery.Voltage() < 11.0)
-    {
-        LCD.WriteAt("Charge Me!",0,0);
-        LCD.WriteAt(Battery.Voltage(),0,40);
-        return 0;
-	}
-
+    int turnChoice = RPS.FuelType();
+    if (turnChoice == 1){
+        spin.SetDegree(0);
+    }else{
+        spin.SetDegree(180);
+    }
     //Wait for light
     while(light > 2.7)
     {
         light = CdS_Cell.Value();
     }
-    //Leave starting area
-    drivePolar(90, 13.5, MOTOR_SPEED);
-    Sleep(500);
-
-    drivePolar(0, 9, MOTOR_SPEED);
-    Sleep(500);
-
-    drivePolar(90, 18, MOTOR_SPEED);
-    Sleep(500);
-
-    drivePolar(180, 5, MOTOR_SPEED);
-    Sleep(500);
-
-    drivePolar(270, 10.5, MOTOR_SPEED);
-    Sleep(500);
-
-    drivePolar(180, 5, MOTOR_SPEED);
-    Sleep(500);
-
-    bicepStretch();
-    drivePolar(0, 5.5, MOTOR_SPEED);
-    Sleep(200);
-    bicepHalfFlex();
-    Sleep(200);
-    drivePolar(180,1,MOTOR_SPEED);
-
-    drivePolar(270,5.5,MOTOR_SPEED);
-    bicepFlex();
-    Sleep(500);
-    drivePolar(0,3,MOTOR_SPEED);
-    Sleep(500);
-    turnC(90);
-    drivePolar(90,1,MOTOR_SPEED);
-    Sleep(500);
-    driveUpHill(75);
-    Sleep(500);
+    drivePolar(180,6,MOTOR_SPEED);
+    drivePolar(270,20,MOTOR_SPEED);
+    driveUpHill(MOTOR_SPEED);
     turnCC(45);
-    Sleep(500);
-    drivePolar(280,18,MOTOR_SPEED);
-    Sleep(500);
-    drivePolar(0,11,MOTOR_SPEED);
-    bicepStretch();
-    Sleep(1000);
-    drivePolar(180,7,MOTOR_SPEED);
-    Sleep(500);
-    drivePolar(260.0,17,MOTOR_SPEED);
-    return 0;
+    drivePolar(0,18,MOTOR_SPEED);
+    drivePolar(270,15,MOTOR_SPEED);
+    if (turnChoice == 1){
+       spin.SetDegree(180);
+    }else{
+        spin.SetDegree(0);
+    }
+    drivePolar(90,15,MOTOR_SPEED);
+    drivePolar(180,18,MOTOR_SPEED);
+    turnC(45);
+    drivePolar(180,10,MOTOR_SPEED);
 }
 
 
@@ -402,6 +365,32 @@ float driveLeftFourCdSCell(int counts, float power)
     backRight.Stop();
     return minCdSCellValue;
 }
+void driveLeftFour(int counts, float power)
+{
+    float minCdSCellValue = 20;
+    int sumClicks = 0;
+    frontRightEncoder.ResetCounts();
+    frontLeftEncoder.ResetCounts();
+    backLeftEncoder.ResetCounts();
+    backRightEncoder.ResetCounts();
+    frontLeft.SetPercent(power);
+    frontRight.SetPercent(-1*power);
+    backRight.SetPercent(power);
+    backLeft.SetPercent(-1*power);
+    while( sumClicks < 4*counts)
+    {
+        sumClicks = frontLeftEncoder.Counts() +frontRightEncoder.Counts() + backRightEncoder.Counts() + backLeftEncoder.Counts();
+        if (minCdSCellValue>CdS_Cell.Value())
+        {
+            minCdSCellValue = CdS_Cell.Value();
+        }
+    }
+    frontLeft.Stop();
+    frontRight.Stop();
+    backLeft.Stop();
+    backRight.Stop();
+    return
+}
 void performanceTestTwo()
 {
     float light = 3.3;
@@ -447,4 +436,78 @@ void performanceTestTwo()
     driveLeftFour(50,MOTOR_POWER);
     //Drive into the ending button
     driveBackwardFour(50,MOTOR_POWER);
-}*/
+}
+
+void performanceTestThree(){
+
+    bicep.SetMin(1211);
+    bicep.SetMax(2340);
+    bicepFlex();
+
+    float light = 3.3;
+    float speed;
+    int frontLeftClicks = 0, frontRightClicks = 0, backRightClicks = 0, backLeftClicks = 0;
+    int direction = 1;
+    float minCdSCellValue = 3.3;
+
+    if(Battery.Voltage() < 11.0)
+    {
+        LCD.WriteAt("Charge Me!",0,0);
+        LCD.WriteAt(Battery.Voltage(),0,40);
+        return 0;
+    }
+
+    //Wait for light
+    while(light > 2.7)
+    {
+        light = CdS_Cell.Value();
+    }
+    //Leave starting area
+    drivePolar(90, 13.5, MOTOR_SPEED);
+    Sleep(500);
+
+    drivePolar(0, 9, MOTOR_SPEED);
+    Sleep(500);
+
+    drivePolar(90, 18, MOTOR_SPEED);
+    Sleep(500);
+
+    drivePolar(180, 5, MOTOR_SPEED);
+    Sleep(500);
+
+    drivePolar(270, 10.5, MOTOR_SPEED);
+    Sleep(500);
+
+    drivePolar(180, 5, MOTOR_SPEED);
+    Sleep(500);
+
+    bicepStretch();
+    drivePolar(0, 5.5, MOTOR_SPEED);
+    Sleep(200);
+    bicepHalfFlex();
+    Sleep(200);
+    drivePolar(180,1,MOTOR_SPEED);
+
+    drivePolar(270,5.5,MOTOR_SPEED);
+    bicepFlex();
+    Sleep(500);
+    drivePolar(0,3,MOTOR_SPEED);
+    Sleep(500);
+    turnC(90);
+    drivePolar(90,1,MOTOR_SPEED);
+    Sleep(500);
+    driveUpHill(75);
+    Sleep(500);
+    turnCC(45);
+    Sleep(500);
+    drivePolar(280,18,MOTOR_SPEED);
+    Sleep(500);
+    drivePolar(0,11,MOTOR_SPEED);
+    bicepStretch();
+    Sleep(1000);
+    drivePolar(180,7,MOTOR_SPEED);
+    Sleep(500);
+    drivePolar(260.0,17,MOTOR_SPEED);
+    return 0;
+ }
+*/
