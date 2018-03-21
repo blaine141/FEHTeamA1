@@ -154,7 +154,7 @@ int main()
     }else{
         spin.SetDegree(180);
     }
-    drivePolar(0,18,MOTOR_SPEED);
+    drivePolar(0,19,MOTOR_SPEED);
     drivePolar(270,13,MOTOR_SPEED);
     Sleep(500);
     if (turnChoice == 1){
@@ -308,18 +308,25 @@ void driveUpHill(float percent)
     setBackLeftSpeed(YSpeed);
     setFrontLeftSpeed(XSpeed);
     setBackRightSpeed(XSpeed);
-
+    
+    float accel = 0;
+    
     bool touchedHill = false;
-    while(!touchedHill || abs(Accel.X()) > .07)
+    while(!touchedHill || accel > .07)
     {
-        LCD.WriteAt(Accel.X(),0,0);
-        if(abs(Accel.X()) >.15)
+        accel = abs(Accel.X());
+        if(accel >.15)
             touchedHill = true;
-        setFrontRightSpeed(YSpeed * (1+2*abs(Accel.X())));
-        setBackLeftSpeed(YSpeed * (1+2*abs(Accel.X())));
-        setFrontLeftSpeed(XSpeed * (1+2*abs(Accel.X())));
-        setBackRightSpeed(XSpeed * (1+2*abs(Accel.X())));
+        setFrontRightSpeed(YSpeed * (1+2*accel));
+        setBackLeftSpeed(YSpeed * (1+2*accel));
+        setFrontLeftSpeed(XSpeed * (1+2*accel));
+        setBackRightSpeed(XSpeed * (1+2*accel));
     }
+    
+    frontRight.Stop();
+    frontLeft.Stop();
+    backRight.Stop();
+    backLeft.Stop();
 
 }
 

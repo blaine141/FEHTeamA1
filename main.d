@@ -19,9 +19,10 @@
  O:\fehqt\Proteus/EWL/EWL_C/include/cstdarg \
  O:\fehqt\Proteus/EWL/EWL_C/include/va_list.h \
  O:\fehqt\Proteus/EWL/EWL_C/include/arm/stdarg.ARM.h Drivers/ffconf.h \
- Drivers/ffconf.h Drivers/diskio.h Libraries/FEHServo.h \
- Libraries/FEHAccel.h Drivers/i2c.h Libraries/FEHBattery.h \
- Libraries/FEHIO.h O:\fehqt\Proteus/EWL/EWL_C/include/math.h \
+ Drivers/ffconf.h Drivers/diskio.h Libraries/FEHRPS.h Drivers/FEHXBee.h \
+ Libraries/FEHServo.h Libraries/FEHAccel.h Drivers/i2c.h \
+ Libraries/FEHBattery.h Libraries/FEHIO.h \
+ O:\fehqt\Proteus/EWL/EWL_C/include/math.h \
  O:\fehqt\Proteus/EWL/EWL_C/include/cmath \
  O:\fehqt\Proteus/EWL/EWL_C/include/cfloat \
  O:\fehqt\Proteus/EWL/EWL_C/include/ewl_t.h \
@@ -32,8 +33,7 @@
  O:\fehqt\Proteus/EWL/EWL_C/include/math_config.h \
  O:\fehqt\Proteus/EWL/EWL_C/include/arm/math.ARM.h \
  O:\fehqt\Proteus/EWL/EWL_C/include/cerrno \
- O:\fehqt\Proteus/EWL/EWL_C/include/math_integral.h Libraries/FEHRPS.h \
- Drivers/FEHXBee.h
+ O:\fehqt\Proteus/EWL/EWL_C/include/math_integral.h
 
 O:\fehqt\Proteus/EWL/EWL_C++/include/lib_ewl_c++.prefix:
 
@@ -101,6 +101,10 @@ Drivers/ffconf.h:
 
 Drivers/diskio.h:
 
+Libraries/FEHRPS.h:
+
+Drivers/FEHXBee.h:
+
 Libraries/FEHServo.h:
 
 Libraries/FEHAccel.h:
@@ -134,7 +138,3 @@ O:\fehqt\Proteus/EWL/EWL_C/include/arm/math.ARM.h:
 O:\fehqt\Proteus/EWL/EWL_C/include/cerrno:
 
 O:\fehqt\Proteus/EWL/EWL_C/include/math_integral.h:
-
-Libraries/FEHRPS.h:
-
-Drivers/FEHXBee.h:
