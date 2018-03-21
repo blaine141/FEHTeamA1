@@ -93,7 +93,7 @@ float min(float a, float b)
 }
 
 void drivePolar(float angle, float distance, float percent);
-bool driveToCoordinate(float x, float y, float percent);
+void driveToCoordinate(float x, float y, float percent);
 bool turnToAngle(float angle);
 void turnCC(float degrees);
 void turnC(float degrees);
@@ -124,21 +124,20 @@ int main()
 
     curAngle = RPS.Heading();
 
-    while(turnToAngle(0))
+    /*while(turnToAngle(90))
     {
         Sleep(1000);
         curAngle = RPS.Heading();
     }*/
 
-	curX = RPS.X();
+    LCD.WriteAt(curX,0,0);
+    LCD.WriteAt(curY,0,40);
+
+    curX = RPS.X();
     curY = RPS.Y();
-    
-	while(driveToCoordinate(16.5,28.5,MOTOR_SPEED);)
-    {
-        Sleep(1000);
-        curX = RPS.X();
-		curY = RPS.Y();
-    }
+
+    //driveToCoordinate(17,28,MOTOR_SPEED);
+
 
     //Wait for light
     while(light > 2.7)
@@ -155,7 +154,7 @@ int main()
     }else{
         spin.SetDegree(180);
     }
-    drivePolar(0,18,MOTOR_SPEED);
+    drivePolar(0,19,MOTOR_SPEED);
     drivePolar(270,13,MOTOR_SPEED);
     Sleep(500);
     if (turnChoice == 1){
@@ -259,10 +258,8 @@ void drivePolar(float angle, float distance, float percent)
 // 90 is wrench
 // 180 is car
 
-bool driveToCoordinate(float x, float y, float percent)
+void driveToCoordinate(float x, float y, float percent)
 {
-	if(abs(curX - x) < .2 && abs(curY - y) < .2)
-		return false;
     float angle = atan((y-curY)/(x-curX))*180/PI;
     if(x-curX < 0)
     {
@@ -279,7 +276,6 @@ bool driveToCoordinate(float x, float y, float percent)
 
     curX = x;
     curY = y;
-	return true;
 }
 
 bool turnToAngle(float angle)
@@ -312,18 +308,25 @@ void driveUpHill(float percent)
     setBackLeftSpeed(YSpeed);
     setFrontLeftSpeed(XSpeed);
     setBackRightSpeed(XSpeed);
-
+    
+    float accel = 0;
+    
     bool touchedHill = false;
-    while(!touchedHill || abs(Accel.X()) > .07)
+    while(!touchedHill || accel > .07)
     {
-        LCD.WriteAt(Accel.X(),0,0);
-        if(abs(Accel.X()) >.15)
+        accel = abs(Accel.X());
+        if(accel >.15)
             touchedHill = true;
-        setFrontRightSpeed(YSpeed * (1+2*abs(Accel.X())));
-        setBackLeftSpeed(YSpeed * (1+2*abs(Accel.X())));
-        setFrontLeftSpeed(XSpeed * (1+2*abs(Accel.X())));
-        setBackRightSpeed(XSpeed * (1+2*abs(Accel.X())));
+        setFrontRightSpeed(YSpeed * (1+2*accel));
+        setBackLeftSpeed(YSpeed * (1+2*accel));
+        setFrontLeftSpeed(XSpeed * (1+2*accel));
+        setBackRightSpeed(XSpeed * (1+2*accel));
     }
+    
+    frontRight.Stop();
+    frontLeft.Stop();
+    backRight.Stop();
+    backLeft.Stop();
 
 }
 
