@@ -89,7 +89,7 @@ float min(float a, float b)
 }
 
 void drivePolar(float angle, float distance, float percent);
-void driveToCoordinate(float x, float y, float percent);
+bool driveToCoordinate(float x, float y, float percent);
 bool turnToAngle(float angle);
 void turnCC(float degrees);
 void turnC(float degrees);
@@ -121,19 +121,21 @@ int main()
 
     curAngle = RPS.Heading();
 
-    while(turnToAngle(180))
+    while(turnToAngle(0))
     {
         Sleep(1000);
         curAngle = RPS.Heading();
     }
 
-    LCD.WriteAt(curX,0,0);
-    LCD.WriteAt(curY,0,40);
-
-    curX = RPS.X();
+	curX = RPS.X();
     curY = RPS.Y();
-
-    driveToCoordinate(18.7,28,MOTOR_SPEED);
+    
+	while(driveToCoordinate(16.5,28.5,MOTOR_SPEED);)
+    {
+        Sleep(1000);
+        curX = RPS.X();
+		curY = RPS.Y();
+    }
 
     //Wait for light
     while(light > 2.7)
@@ -278,8 +280,10 @@ void drivePolar(float angle, float distance, float percent)
 // 90 is wrench
 // 180 is car
 
-void driveToCoordinate(float x, float y, float percent)
+bool driveToCoordinate(float x, float y, float percent)
 {
+	if(abs(curX - x) < .2 && abs(curY - y) < .2)
+		return false;
     float angle = atan((y-curY)/(x-curX))*180/PI;
     if(x-curX < 0)
     {
@@ -296,6 +300,7 @@ void driveToCoordinate(float x, float y, float percent)
 
     curX = x;
     curY = y;
+	return true;
 }
 
 bool turnToAngle(float angle)
