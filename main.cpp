@@ -114,7 +114,7 @@ int main()
     {
         LCD.WriteAt("Charge Me!",0,0);
         LCD.WriteAt(Battery.Voltage(),0,40);
-
+        return 0;
 	}
 
 
@@ -123,27 +123,26 @@ int main()
 
     curAngle = RPS.Heading();
 
-    while(turnToAngle(0))
+   /*while(turnToAngle(0))
     {
         Sleep(1000);
         curAngle = RPS.Heading();
-    }*/
+    }
 
 	curX = RPS.X();
     curY = RPS.Y();
-<<<<<<< HEAD
 
-
-
-=======
     
-	while(driveToCoordinate(16.5,28.5,MOTOR_SPEED);)
+    /*while(driveToCoordinate(16.5,28.5,MOTOR_SPEED))
     {
         Sleep(1000);
         curX = RPS.X();
 		curY = RPS.Y();
-    }
->>>>>>> 474adde60cfdb3d7f952c7aff9224198c4b879cb
+    }*/
+
+    LCD.Clear(FEHLCD::White);
+    LCD.PrintImage(35,0);
+    LCD.PrintLogo(130,92);
 
     //Wait for light
     while(light > 2.7)
@@ -323,13 +322,8 @@ void drivePolar(float angle, float distance, float percent)
 
 bool driveToCoordinate(float x, float y, float percent)
 {
-<<<<<<< HEAD
     if(abs(x-curX) < .6 && abs(y-curY)<.6)
         return false;
-=======
-	if(abs(curX - x) < .2 && abs(curY - y) < .2)
-		return false;
->>>>>>> 474adde60cfdb3d7f952c7aff9224198c4b879cb
     float angle = atan((y-curY)/(x-curX))*180/PI;
     if(x-curX < 0)
     {
@@ -346,11 +340,7 @@ bool driveToCoordinate(float x, float y, float percent)
 
     curX = x;
     curY = y;
-<<<<<<< HEAD
     return true;
-=======
-	return true;
->>>>>>> 474adde60cfdb3d7f952c7aff9224198c4b879cb
 }
 
 bool turnToAngle(float angle)
