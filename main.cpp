@@ -93,7 +93,7 @@ float min(float a, float b)
 }
 
 void drivePolar(float angle, float distance, float percent);
-void driveToCoordinate(float x, float y, float percent);
+bool driveToCoordinate(float x, float y, float percent);
 bool turnToAngle(float angle);
 void turnCC(float degrees);
 void turnC(float degrees);
@@ -104,10 +104,9 @@ void driveUpHill(float percent);
 
 int main()
 {
-
     RPS.InitializeTouchMenu();
     spin.SetMin(512);
-    spin.SetMax(2389);
+    spin.SetMax(2600);
     float light = 3.3;
 
 
@@ -115,7 +114,7 @@ int main()
     {
         LCD.WriteAt("Charge Me!",0,0);
         LCD.WriteAt(Battery.Voltage(),0,40);
-        return 0;
+
 	}
 
 
@@ -136,26 +135,83 @@ int main()
     curX = RPS.X();
     curY = RPS.Y();
 
-    //driveToCoordinate(17,28,MOTOR_SPEED);
+
 
 
     //Wait for light
     while(light > 2.7)
     {
         light = CdS_Cell.Value();
+
+
+        curX = RPS.X();
+        curY = RPS.Y();
+
+        LCD.WriteAt(curX,0,0);
+        LCD.WriteAt(curY,0,40);
     }
-    drivePolar(90,6,MOTOR_SPEED);
-    drivePolar(180,20,MOTOR_SPEED);
+    //Leave
+
+    drivePolar(90,7,MOTOR_SPEED);
+    drivePolar(180,9,MOTOR_SPEED);
+    drivePolar(90,5,MOTOR_SPEED);
+    while(RPS.IsDeadzoneActive() != 2)
+    {
+        if(RPS.IsDeadzoneActive() != 1)
+        {
+            setFrontLeftSpeed(-MOTOR_SPEED);
+            setFrontRightSpeed(MOTOR_SPEED);
+            setBackLeftSpeed(MOTOR_SPEED);
+            setBackRightSpeed(-MOTOR_SPEED);
+        }
+        else
+        {
+            frontRight.Stop();
+            frontLeft.Stop();
+            backRight.Stop();
+            backLeft.Stop();
+        }
+
+    }
+    drivePolar(270,5,MOTOR_SPEED);
+    drivePolar(0,19,MOTOR_SPEED);
     driveUpHill(MOTOR_SPEED);
+
     turnC(45);
+    drivePolar(0,3.3,MOTOR_SPEED);
     int turnChoice = RPS.FuelType();
     if (turnChoice == 1){
         spin.SetDegree(0);
     }else{
         spin.SetDegree(180);
     }
-    drivePolar(0,18,MOTOR_SPEED);
-    drivePolar(270,13,MOTOR_SPEED);
+
+    drivePolar(270,25,MOTOR_SPEED);
+    Sleep(1000);
+
+    curAngle = RPS.Heading();
+
+    while(turnToAngle(45))
+    {
+        Sleep(1000);
+        curAngle = RPS.Heading();
+    }
+
+    Sleep(1000);
+
+    curX = RPS.X();
+    curY = RPS.Y();
+
+    while(driveToCoordinate(21.6,62.6,MOTOR_SPEED))
+    {
+       Sleep(1000);
+       curX = RPS.X();
+       curY = RPS.Y();
+    }
+
+
+
+    drivePolar(270,3,MOTOR_SPEED);
     Sleep(500);
     if (turnChoice == 1){
        spin.SetDegree(180);
@@ -166,7 +222,7 @@ int main()
     drivePolar(90,15,MOTOR_SPEED);
     drivePolar(180,18,MOTOR_SPEED);
     turnC(45);
-    drivePolar(180,10,MOTOR_SPEED);
+    drivePolar(180,19,MOTOR_SPEED);
 }
 
 
@@ -258,15 +314,17 @@ void drivePolar(float angle, float distance, float percent)
 // 90 is wrench
 // 180 is car
 
-void driveToCoordinate(float x, float y, float percent)
+bool driveToCoordinate(float x, float y, float percent)
 {
+    if(abs(x-curX) < .6 && abs(y-curY)<.6)
+        return false;
     float angle = atan((y-curY)/(x-curX))*180/PI;
     if(x-curX < 0)
     {
         angle += 180;
     }
 
-    angle = angle - 90 + curAngle;
+    angle = angle  - 90 -  curAngle;
 
     LCD.WriteAt(angle,0,80);
 
@@ -276,6 +334,7 @@ void driveToCoordinate(float x, float y, float percent)
 
     curX = x;
     curY = y;
+    return true;
 }
 
 bool turnToAngle(float angle)
@@ -308,18 +367,25 @@ void driveUpHill(float percent)
     setBackLeftSpeed(YSpeed);
     setFrontLeftSpeed(XSpeed);
     setBackRightSpeed(XSpeed);
-
+    
+    float accel = 0;
+    
     bool touchedHill = false;
-    while(!touchedHill || abs(Accel.X()) > .07)
+    while(!touchedHill || accel > .07)
     {
-        LCD.WriteAt(Accel.X(),0,0);
-        if(abs(Accel.X()) >.15)
+        accel = abs(Accel.X());
+        if(accel >.15)
             touchedHill = true;
-        setFrontRightSpeed(YSpeed * (1+2*abs(Accel.X())));
-        setBackLeftSpeed(YSpeed * (1+2*abs(Accel.X())));
-        setFrontLeftSpeed(XSpeed * (1+2*abs(Accel.X())));
-        setBackRightSpeed(XSpeed * (1+2*abs(Accel.X())));
+        setFrontRightSpeed(YSpeed * (1+2*accel));
+        setBackLeftSpeed(YSpeed * (1+2*accel));
+        setFrontLeftSpeed(XSpeed * (1+2*accel));
+        setBackRightSpeed(XSpeed * (1+2*accel));
     }
+    
+    frontRight.Stop();
+    frontLeft.Stop();
+    backRight.Stop();
+    backLeft.Stop();
 
 }
 
@@ -741,4 +807,126 @@ void performanceTestThree(){
     drivePolar(260.0,17,MOTOR_SPEED);
     return 0;
  }
+ 
+ void performanceTestFour(){
+    RPS.InitializeTouchMenu();
+    spin.SetMin(512);
+    spin.SetMax(2600);
+    float light = 3.3;
+
+
+    if(Battery.Voltage() < 11.0)
+    {
+        LCD.WriteAt("Charge Me!",0,0);
+        LCD.WriteAt(Battery.Voltage(),0,40);
+
+	}
+
+
+    Sleep(1000);
+
+
+    curAngle = RPS.Heading();
+
+    while(turnToAngle(90))
+    {
+        Sleep(1000);
+        curAngle = RPS.Heading();
+    }
+
+    LCD.WriteAt(curX,0,0);
+    LCD.WriteAt(curY,0,40);
+
+    curX = RPS.X();
+    curY = RPS.Y();
+
+
+
+
+    //Wait for light
+    while(light > 2.7)
+    {
+        light = CdS_Cell.Value();
+
+
+        curX = RPS.X();
+        curY = RPS.Y();
+
+        LCD.WriteAt(curX,0,0);
+        LCD.WriteAt(curY,0,40);
+    }
+    //Leave
+
+    drivePolar(90,7,MOTOR_SPEED);
+    drivePolar(180,9,MOTOR_SPEED);
+    drivePolar(90,5,MOTOR_SPEED);
+    while(RPS.IsDeadzoneActive() != 2)
+    {
+        if(RPS.IsDeadzoneActive() != 1)
+        {
+            setFrontLeftSpeed(-MOTOR_SPEED);
+            setFrontRightSpeed(MOTOR_SPEED);
+            setBackLeftSpeed(MOTOR_SPEED);
+            setBackRightSpeed(-MOTOR_SPEED);
+        }
+        else
+        {
+            frontRight.Stop();
+            frontLeft.Stop();
+            backRight.Stop();
+            backLeft.Stop();
+        }
+
+    }
+    drivePolar(270,5,MOTOR_SPEED);
+    drivePolar(0,19,MOTOR_SPEED);
+    driveUpHill(MOTOR_SPEED);
+
+    turnC(45);
+    drivePolar(0,3.3,MOTOR_SPEED);
+    int turnChoice = RPS.FuelType();
+    if (turnChoice == 1){
+        spin.SetDegree(0);
+    }else{
+        spin.SetDegree(180);
+    }
+
+    drivePolar(270,25,MOTOR_SPEED);
+    Sleep(1000);
+
+    curAngle = RPS.Heading();
+
+    while(turnToAngle(45))
+    {
+        Sleep(1000);
+        curAngle = RPS.Heading();
+    }
+
+    Sleep(1000);
+
+    curX = RPS.X();
+    curY = RPS.Y();
+
+    while(driveToCoordinate(21.6,62.6,MOTOR_SPEED))
+    {
+       Sleep(1000);
+       curX = RPS.X();
+       curY = RPS.Y();
+    }
+
+
+
+    drivePolar(270,3,MOTOR_SPEED);
+    Sleep(500);
+    if (turnChoice == 1){
+       spin.SetDegree(180);
+    }else{
+        spin.SetDegree(0);
+    }
+    Sleep(1000);
+    drivePolar(90,15,MOTOR_SPEED);
+    drivePolar(180,18,MOTOR_SPEED);
+    turnC(45);
+    drivePolar(180,19,MOTOR_SPEED);
+    }
 */
