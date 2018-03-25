@@ -123,7 +123,7 @@ int main()
     {
         LCD.WriteAt("Charge Me!",0,0);
         LCD.WriteAt(Battery.Voltage(),0,40);
-
+        return 0;
 	}
 
 
@@ -132,7 +132,11 @@ int main()
 
     curAngle = RPS.Heading();
 
+
     while(turnToAngle(90))
+
+   
+
     {
         Sleep(1000);
         curAngle = RPS.Heading();
@@ -145,14 +149,24 @@ int main()
 
 
 
+
     
     while(driveToCoordinate(16.1,25.3,MOTOR_SPEED))
+
+
+    
+    
     {
         Sleep(1000);
         curX = RPS.X();
 		curY = RPS.Y();
     }
     bicepFlex();
+
+    LCD.Clear(FEHLCD::White);
+    LCD.PrintImage(35,0);
+    LCD.PrintLogo(130,92);
+
     //Wait for light
     while(light > 2.7)
     {
@@ -491,8 +505,6 @@ bool driveToCoordinate(float x, float y, float percent)
     if(abs(x-curX) < .6 && abs(y-curY)<.6)
         return false;
 
-
-
     float angle = atan((y-curY)/(x-curX))*180/PI;
     if(x-curX < 0)
     {
@@ -509,6 +521,7 @@ bool driveToCoordinate(float x, float y, float percent)
 
     curX = x;
     curY = y;
+
 
 
 	return true;
@@ -547,6 +560,7 @@ bool driveToCoordinateNew(float x, float y, float percent)
 
 
     return true;
+
 
 }
 
