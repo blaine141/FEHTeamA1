@@ -462,6 +462,17 @@ void drivePolarNew(float angle, float distance, float percent, float absoluteDir
 
                 if(abs(angleError)<10)
                 {
+                    float a = cos(PI/180*absoluteDirection);
+                    float b = sin(PI/180*absoluteDirection);
+                    float c = -1*(a*curX+b*curY);
+                    float distance = a * RPSX + b * RPSY + c;
+                    distance *=500/81;
+                    YEnd += -XSpeed*distance;
+                    XEnd += YSpeed*distance;
+                    FLPredicted += YSpeed*distance;
+                    FRPredicted += -XSpeed*distance;
+                    BLPredicted += -XSpeed*distance;
+                    BRPredicted += YSpeed*distance;
                     correctionMade = true;
                 }
                 lastX = RPSX;
