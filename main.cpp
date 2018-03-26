@@ -119,7 +119,7 @@ int main()
 
 
 
-    if(Battery.Voltage() < 11.0)
+    if(Battery.Voltage() < 10.8)
     {
         LCD.WriteAt("Charge Me!",0,0);
         LCD.WriteAt(Battery.Voltage(),0,40);
@@ -151,7 +151,7 @@ int main()
 
 
     
-    while(driveToCoordinate(16.1,25.3,MOTOR_SPEED))
+    while(driveToCoordinate(15.6,25.9,MOTOR_SPEED))
 
 
     
@@ -166,6 +166,7 @@ int main()
     LCD.Clear(FEHLCD::White);
     LCD.PrintImage(35,0);
     LCD.PrintLogo(130,92);
+    LCD.SetFontColor(FEHLCD::Black);
 
     //Wait for light
     while(light > 2.7)
@@ -182,10 +183,32 @@ int main()
     //Leave
 
     driveToCoordinateNew(curX, curY - 8, MOTOR_SPEED);
-    driveToCoordinateNew(curX+8, curY , MOTOR_SPEED);
-    driveToCoordinateNew(curX-8, curY , MOTOR_SPEED);
-    driveToCoordinateNew(curX, curY + 8, MOTOR_SPEED);
+    //Drive to light
+    driveToCoordinateNew(24.5, 18.0 , MOTOR_SPEED);
+    if(CdS_Cell.Value() < 0.7){
+        LCD.WriteAt("red",0,0);
 
+        direction = 1;
+    }else{
+        LCD.WriteAt("blue",0,0);
+        direction = 0;
+
+    }
+    LCD.WriteAt(CdS_Cell.Value(),0,120);
+    buttonDecision(direction);
+    driveToCoordinateNew(curX-8, curY, MOTOR_SPEED);
+    //drive to wrench
+    driveToCoordinateNew(8.5,13.1,MOTOR_SPEED);
+    bicepStretch();
+    driveToCoordinateNew(curX-3.5,curY,MOTOR_SPEED);
+    Sleep(500);
+    bicepHalfFlex();
+    Sleep(500);
+    driveToCoordinateNew(curX+3.5,curY+5,MOTOR_SPEED);
+    bicepFlex();
+    driveToCoordinateNew(curX-2, curY , MOTOR_SPEED);
+    driveUpHill(MOTOR_SPEED);
+    return 0;
     driveToCoordinateNew(curX, curY - 8, MOTOR_SPEED);
     Sleep(500);
 
@@ -457,8 +480,7 @@ void drivePolarNew(float angle, float distance, float percent, float absoluteDir
                     angleError -= 360;
 
 
-                LCD.WriteAt(correctionMade,0,40);\
-                LCD.WriteAt(movementDir,0,80);
+
 
                 if(abs(angleError)<10)
                 {
@@ -466,13 +488,14 @@ void drivePolarNew(float angle, float distance, float percent, float absoluteDir
                     float b = sin(PI/180*absoluteDirection);
                     float c = -1*(a*curX+b*curY);
                     float distance = a * RPSX + b * RPSY + c;
-                    distance *=500/81;
-                    YEnd += -XSpeed*distance;
-                    XEnd += YSpeed*distance;
-                    FLPredicted += YSpeed*distance;
-                    FRPredicted += -XSpeed*distance;
-                    BLPredicted += -XSpeed*distance;
-                    BRPredicted += YSpeed*distance;
+                    distance *=-500/81;
+                    YEnd += -cos(angle*PI/180)*distance;
+                    XEnd += sin(angle*PI/180)*distance;
+
+                    FLPredicted += sin(angle*PI/180)*distance;
+                    FRPredicted += -cos(angle*PI/180)*distance;
+                    BLPredicted += -cos(angle*PI/180)*distance;
+                    BRPredicted += sin(angle*PI/180)*distance;
                     correctionMade = true;
                 }
                 lastX = RPSX;
@@ -480,7 +503,7 @@ void drivePolarNew(float angle, float distance, float percent, float absoluteDir
             }
         }
 
-        LCD.WriteAt(correctionMade,0,0);
+
 
         double currentTime = TimeNow();
 
@@ -524,7 +547,7 @@ bool driveToCoordinate(float x, float y, float percent)
 
     angle = angle  - 90 -  curAngle;
 
-    LCD.WriteAt(angle,0,80);
+
 
     float distance = sqrt((y-curY)*(y-curY)+(x-curX)*(x-curX));
 
@@ -583,8 +606,8 @@ bool turnToAngle(float angle)
     if(angleError < -180)
         angleError += 360;
     curAngle = angle;
-    LCD.WriteAt(angleError,0,0);
-    LCD.WriteAt(curAngle,0,40);
+
+
     if(angleError > 2)
         turnCC(angleError);
     else if(angleError < -2)
@@ -669,58 +692,35 @@ void buttonDecision(int direction)
     switch(direction)
     {
     case 0:
-       drivePolar(180,2,MOTOR_SPEED);
-       drivePolar(90,3,MOTOR_SPEED);
-       while(RPS.IsDeadzoneActive() != 2)
-       {
-           if(RPS.IsDeadzoneActive() != 1)
-           {
-               setFrontLeftSpeed(-MOTOR_SPEED/2);
-               setFrontRightSpeed(MOTOR_SPEED/2);
-               setBackLeftSpeed(MOTOR_SPEED/2);
-               setBackRightSpeed(-MOTOR_SPEED/2);
-           }
-           else
-           {
-               frontRight.Stop();
-               frontLeft.Stop();
-               backRight.Stop();
-               backLeft.Stop();
-           }
-
-       }
-       drivePolar(270,3,MOTOR_SPEED);
-       drivePolar(0,2,MOTOR_SPEED);
-       LCD.WriteLine("BLUE");
+       driveToCoordinateNew(curX+2.3,curY,MOTOR_SPEED);
     break;
 
     case 1:
-       drivePolar(0,2,MOTOR_SPEED);
-       drivePolar(90,3,MOTOR_SPEED);
-       while(RPS.IsDeadzoneActive() != 2)
-       {
-           if(RPS.IsDeadzoneActive() != 1)
-           {
-               setFrontLeftSpeed(-MOTOR_SPEED/2);
-               setFrontRightSpeed(MOTOR_SPEED/2);
-               setBackLeftSpeed(MOTOR_SPEED/2);
-               setBackRightSpeed(-MOTOR_SPEED/2);
-           }
-           else
-           {
-               frontRight.Stop();
-               frontLeft.Stop();
-               backRight.Stop();
-               backLeft.Stop();
-           }
-
-       }
-       drivePolar(270,3,MOTOR_SPEED);
-       drivePolar(180,2,MOTOR_SPEED);
-       LCD.WriteLine("RED");
+       driveToCoordinate(curX-2.3,curY,MOTOR_SPEED);
     break;
 
-}
+    }
+    while(RPS.IsDeadzoneActive() != 2)
+    {
+        if(RPS.IsDeadzoneActive() != 1)
+        {
+            setFrontLeftSpeed(-MOTOR_SPEED/2);
+            setFrontRightSpeed(MOTOR_SPEED/2);
+            setBackLeftSpeed(MOTOR_SPEED/2);
+            setBackRightSpeed(-MOTOR_SPEED/2);
+        }
+        else
+        {
+            frontRight.Stop();
+            frontLeft.Stop();
+            backRight.Stop();
+            backLeft.Stop();
+        }
+
+    }
+    curX = RPS.X();
+    curY = RPS.Y();
+    driveToCoordinateNew(24.5, 18.0 , MOTOR_SPEED);
 }
 float driveLeftFourCdSCell(int counts, float power)
 {

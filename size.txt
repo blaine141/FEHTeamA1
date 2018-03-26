@@ -1,6 +1,2 @@
    text	   data	    bss	    dec	    hex	filename
-<<<<<<< HEAD
-  68796	    560	   5824	  75180	  125ac	../FEHTeamA1.elf
-=======
-  63836	    560	   5824	  70220	  1124c	../FEHTeamA1.elf
->>>>>>> d16388d0c8bd17424baf919a1ea4584f9ca5d727
+  69324	    560	   5824	  75708	  127bc	../FEHTeamA1.elf
