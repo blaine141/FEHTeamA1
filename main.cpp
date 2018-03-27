@@ -101,7 +101,7 @@ bool turnToAngle(float angle);
 void turnCC(float degrees);
 void turnC(float degrees);
 void bicepStretch();
-void bicepHalfFlex();
+void bicepSlowFlex();
 void bicepFlex();
 void driveUpHill(float percent);
 void buttonDecision(int direction);
@@ -228,10 +228,9 @@ int main()
     Sleep(500);
     driveToCoordinateNew(curX-6,curY,MOTOR_SPEED);
     Sleep(500);
-    bicepHalfFlex();
+    bicepSlowFlex();
     Sleep(500);
     driveToCoordinateNew(curX+3.5,curY+5,MOTOR_SPEED);
-    bicepFlex();
     driveToCoordinateNew(curX-5, curY , MOTOR_SPEED);
     turnToAngle(0);
     //Drive up the hill
@@ -333,6 +332,15 @@ void bicepHalfFlex()
 void bicepFlex()
 {
     bicep.SetDegree(0);
+}
+
+void bicepSlowFlex(int ms){
+    long start = TimeNowMSec();
+    while(TimeNowMSec() - start < ms)
+    {
+        bicep.SetDegree(180-(TikeNowMSec()-start)*180/ms);
+    }
+
 }
 
 void whereAmI()
