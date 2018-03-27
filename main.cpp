@@ -92,6 +92,7 @@ float min(float a, float b)
     return a;
 }
 
+void whereAmI();
 void drivePolar(float angle, float distance, float percent);
 void drivePolarNew(float angle, float distance, float percent, float absoluteDirection);
 bool driveToCoordinate(float x, float y, float percent);
@@ -104,7 +105,9 @@ void bicepHalfFlex();
 void bicepFlex();
 void driveUpHill(float percent);
 void buttonDecision(int direction);
-float driveLeftFourCdSCell(int counts, float power);
+float getRPSX();
+float getRPSY();
+float getRPSHeading();
 
 int main()
 {
@@ -113,6 +116,8 @@ int main()
     spin.SetMax(2600);
     bicep.SetMin(1211);
     bicep.SetMax(2340);
+
+    bicepFlex();
 
     float light = 3.3;
     int direction;
@@ -130,36 +135,22 @@ int main()
     Sleep(1000);
 
 
-    curAngle = RPS.Heading();
+    whereAmI();
 
 
     while(turnToAngle(90))
-
-   
-
     {
         Sleep(1000);
-        curAngle = RPS.Heading();
+        whereAmI();
     }
 
-	curX = RPS.X();
-    curY = RPS.Y();
-
-
-
-
-
+    whereAmI();
 
     
-    while(driveToCoordinate(15.6,25.9,MOTOR_SPEED))
-
-
-    
-    
+    while(driveToCoordinate(15.6,25.9,MOTOR_SPEED)) 
     {
         Sleep(1000);
-        curX = RPS.X();
-		curY = RPS.Y();
+        whereAmI();
     }
     bicepFlex();
 
@@ -173,9 +164,7 @@ int main()
     {
         light = CdS_Cell.Value();
 
-
-        curX = RPS.X();
-        curY = RPS.Y();
+        whereAmI();
 
         LCD.WriteAt(curX,0,0);
         LCD.WriteAt(curY,0,40);
@@ -185,9 +174,10 @@ int main()
     driveToCoordinateNew(curX, curY - 8, MOTOR_SPEED);
     //Drive to light
     driveToCoordinateNew(24.5, 18.0 , MOTOR_SPEED);
+    //Pick a light and drive to it
+    Sleep(500);
     if(CdS_Cell.Value() < 0.7){
         LCD.WriteAt("red",0,0);
-
         direction = 1;
     }else{
         LCD.WriteAt("blue",0,0);
@@ -196,82 +186,75 @@ int main()
     }
     LCD.WriteAt(CdS_Cell.Value(),0,120);
     buttonDecision(direction);
-    driveToCoordinateNew(curX-8, curY, MOTOR_SPEED);
+    curAngle = RPS.Heading();
+    turnToAngle(90);
+    driveToCoordinateNew(curX-14, curY, MOTOR_SPEED);
+
+    driveToCoordinateNew(6.2,8,MOTOR_SPEED);
+
+    driveToCoordinateNew(curX, curY - 4, MOTOR_SPEED);
+
+    driveToCoordinateNew(curX + 2, curY, MOTOR_SPEED);
+
+    Sleep(1000);
+
+    whereAmI();
+
+    driveToCoordinateNew(curX - 2, curY, MOTOR_SPEED);
+
+    driveToCoordinateNew(curX, curY + 4, MOTOR_SPEED);
+
+
     //drive to wrench
-    driveToCoordinateNew(8.5,13.1,MOTOR_SPEED);
+
+    whereAmI();
+    while(turnToAngle(90))
+    {
+        Sleep(1000);
+        whereAmI();
+    }
+
+    whereAmI();
+
+
+    while(driveToCoordinate(11,13.1,MOTOR_SPEED))
+    {
+        Sleep(1000);
+        whereAmI();
+    }
+    //Pick up wrench and drive to ramp
     bicepStretch();
-    driveToCoordinateNew(curX-3.5,curY,MOTOR_SPEED);
+    turnToAngle(90);
+    Sleep(500);
+    driveToCoordinateNew(curX-6,curY,MOTOR_SPEED);
     Sleep(500);
     bicepHalfFlex();
     Sleep(500);
     driveToCoordinateNew(curX+3.5,curY+5,MOTOR_SPEED);
     bicepFlex();
-    driveToCoordinateNew(curX-2, curY , MOTOR_SPEED);
-    driveUpHill(MOTOR_SPEED);
-    return 0;
-    driveToCoordinateNew(curX, curY - 8, MOTOR_SPEED);
-    Sleep(500);
-
-    //Go towards button board, but go past and go to wall, reaading CdS cell values along the way
-
-    //float minCdSCellValue = driveLeftFourCdSCell(70,MOTOR_SPEED);
-
-    //LCD.WriteAt(minCdSCellValue,0,20);
-    //if(minCdSCellValue>=.6)
-    //{
-        direction=0;
-    //}
-    Sleep(500);
-    //Drive back to button board
-    driveToCoordinateNew(curX - 10, curY, MOTOR_SPEED);
-
-    driveToCoordinateNew(curX, curY - 10, MOTOR_SPEED);
-    driveToCoordinateNew(curX +10, curY, MOTOR_SPEED);
-    Sleep(500);
-    //Choose a button and drive to it
-    //buttonDecision(direction);
-    //Drive into wrench
-    driveToCoordinateNew(curX - 20, curY, MOTOR_SPEED);
-    //Drive to wall
-    driveToCoordinateNew(curX , curY+18, MOTOR_SPEED);
-    Sleep(500);
-    //Drive into car jack
-    drivePolar(180, 5, MOTOR_SPEED);
-    Sleep(500);
-    //Drive back to wrench
-    drivePolar(270, 10.5, MOTOR_SPEED);
-    Sleep(500);
-    //Back up
-    drivePolar(180, 5, MOTOR_SPEED);
-    Sleep(500);
-    //Lower bicep, drive into wrench and pick it up
-    bicepStretch();
-    drivePolar(0, 5.5, MOTOR_SPEED);
-    Sleep(200);
-    bicepHalfFlex();
-    Sleep(200);
-    drivePolar(180,1,MOTOR_SPEED);
-    //Drive towards ramp
-    drivePolar(270,5.5,MOTOR_SPEED);
-    bicepFlex();
-    Sleep(500);
-    drivePolar(0,3,MOTOR_SPEED);
-    Sleep(500);
+    driveToCoordinateNew(curX-5, curY , MOTOR_SPEED);
+    turnToAngle(0);
     //Drive up the hill
-    driveUpHill(75);
-    Sleep(500);
+    driveUpHill(MOTOR_SPEED);
+    Sleep(1000);
+    whereAmI();
+    driveToCoordinateNew(curX+5, curY , MOTOR_SPEED);
     //Turn to face garage
-    turnCC(45);
-    Sleep(500);
+    turnToAngle(45);
+    Sleep(1000);
+    whereAmI();
+
+
     //Drive to road leading up to garage
-    drivePolar(280,18,MOTOR_SPEED);
+    driveToCoordinateNew(13.8, 56.7, MOTOR_SPEED);
     Sleep(500);
+    curAngle = RPS.Heading();
+    turnToAngle(45);
     //Drive to garage and deposit wrench
-    drivePolar(0,11,MOTOR_SPEED);
+    drivePolar(0,15,MOTOR_SPEED);
     bicepStretch();
     Sleep(1000);
-    //Drive to previous position on road
-    drivePolar(180,11,MOTOR_SPEED);
+    drivePolar(180,12.9,MOTOR_SPEED);
     Sleep(500);
     //DRIVE TO AND SPIN THE BOY
     int turnChoice = RPS.FuelType();
@@ -281,24 +264,22 @@ int main()
         spin.SetDegree(180);
     }
 
-    curAngle = RPS.Heading();
+    whereAmI();
 
     while(turnToAngle(45))
     {
         Sleep(1000);
-        curAngle = RPS.Heading();
+        whereAmI();
     }
 
     Sleep(1000);
 
-    curX = RPS.X();
-    curY = RPS.Y();
+    whereAmI();
 
     while(driveToCoordinate(21.6,62.6,MOTOR_SPEED))
     {
        Sleep(1000);
-       curX = RPS.X();
-       curY = RPS.Y();
+       whereAmI();
     }
 
 
@@ -313,16 +294,23 @@ int main()
     Sleep(1000);
     //NO LONGER SPINNING THE BOY
     //Drive back to road
-    drivePolar(90,15,MOTOR_SPEED);
+    driveToCoordinateNew(14.8, 55.7, MOTOR_SPEED);
+    driveToCoordinateNew(curX,curY - 10,MOTOR_SPEED);
     //Drive towards ramp
-    drivePolar(180,18,MOTOR_SPEED);
+    driveToCoordinateNew(curX + 12,curY,MOTOR_SPEED);
     //Turn and go backwards down the ramp
-    turnC(45);
-    drivePolar(180,21,MOTOR_SPEED);
+    turnToAngle(0);
+    driveToCoordinateNew(curX,curY-25,MOTOR_SPEED);
+
+    turnCC(180);
+    bicepFlex();
+    Sleep(1000);
+    whereAmI();
+
     //Drive to starting box
-    drivePolar(90,7,MOTOR_SPEED);
+    driveToCoordinateNew(curX-12,curY,MOTOR_SPEED);
     //End the run
-    drivePolar(0,8,MOTOR_SPEED);
+    driveToCoordinateNew(curX,curY+25,MOTOR_SPEED);
     return 0;
 
 
@@ -347,6 +335,12 @@ void bicepFlex()
     bicep.SetDegree(0);
 }
 
+void whereAmI()
+{
+    curX = getRPSX();
+    curY = getRPSY();
+    curAngle = getRPSHeading();
+}
 
 void drivePolar(float angle, float distance, float percent)
 {
@@ -439,8 +433,8 @@ void drivePolarNew(float angle, float distance, float percent, float absoluteDir
 
     float p = 5;
 
-    float lastX = RPS.X();
-    float lastY = RPS.Y();
+    float lastX = getRPSX();
+    float lastY = getRPSY();
     bool correctionMade = false;
 
     double lastTime = TimeNow();
@@ -463,8 +457,8 @@ void drivePolarNew(float angle, float distance, float percent, float absoluteDir
 
         if(!correctionMade)
         {
-            float RPSX = RPS.X();
-            float RPSY = RPS.Y();
+            float RPSX = getRPSX();
+            float RPSY = getRPSY();
             if(RPSX != lastX || RPSY != lastY)
             {
                 float movementDir = atan((RPSY - lastY)/(RPSX-lastX))*180/PI;
@@ -614,6 +608,8 @@ bool turnToAngle(float angle)
         turnC(-angleError);
     else
         return false;
+
+    curAngle = angle;
     return true;
 }
 
@@ -621,8 +617,8 @@ bool turnToAngle(float angle)
 void driveUpHill(float percent)
 {
     percent = percent / 2;
-    float XSpeed = cos(-45*PI/180)* percent;
-    float YSpeed = sin(-45*PI/180)* percent;
+    float XSpeed = cos(45*PI/180)* percent;
+    float YSpeed = sin(45*PI/180)* percent;
 
     setFrontRightSpeed(YSpeed);
     setBackLeftSpeed(YSpeed);
@@ -634,7 +630,7 @@ void driveUpHill(float percent)
     bool touchedHill = false;
     while(!touchedHill || accel > .07)
     {
-        accel = abs(Accel.X());
+        accel = abs(Accel.Y());
         if(accel >.15)
             touchedHill = true;
         setFrontRightSpeed(YSpeed * (1+2*accel));
@@ -667,6 +663,7 @@ void turnCC(float degrees)
     frontRight.Stop();
     backLeft.Stop();
     backRight.Stop();
+    curAngle = (int)(curAngle + degrees) % 360;
 
 }
 void turnC(float degrees)
@@ -685,21 +682,26 @@ void turnC(float degrees)
     frontRight.Stop();
     backLeft.Stop();
     backRight.Stop();
+    curAngle = (int)(curAngle - degrees) % 360;
 }
 
 void buttonDecision(int direction)
 {
-    switch(direction)
+    if(direction)
     {
-    case 0:
-       driveToCoordinateNew(curX+2.3,curY,MOTOR_SPEED);
-    break;
-
-    case 1:
-       driveToCoordinate(curX-2.3,curY,MOTOR_SPEED);
-    break;
-
+        driveToCoordinate(curX-3,curY,MOTOR_SPEED);
+        driveToCoordinateNew(curX, curY-3, MOTOR_SPEED/2);
+        driveToCoordinate(curX+3,curY+1,MOTOR_SPEED);
+        driveToCoordinate(curX,curY-1,MOTOR_SPEED);
     }
+    else
+    {
+       driveToCoordinateNew(curX+3.5,curY,MOTOR_SPEED);
+       driveToCoordinateNew(curX, curY-3, MOTOR_SPEED/2);
+       driveToCoordinate(curX-3,curY+1,MOTOR_SPEED);
+       driveToCoordinate(curX,curY-1,MOTOR_SPEED);
+    }
+
     while(RPS.IsDeadzoneActive() != 2)
     {
         if(RPS.IsDeadzoneActive() != 1)
@@ -711,15 +713,14 @@ void buttonDecision(int direction)
         }
         else
         {
-            frontRight.Stop();
             frontLeft.Stop();
-            backRight.Stop();
+            frontRight.Stop();
             backLeft.Stop();
+            backRight.Stop();
         }
 
     }
-    curX = RPS.X();
-    curY = RPS.Y();
+    whereAmI();
     driveToCoordinateNew(24.5, 18.0 , MOTOR_SPEED);
 }
 float driveLeftFourCdSCell(int counts, float power)
@@ -748,6 +749,23 @@ float driveLeftFourCdSCell(int counts, float power)
     backRight.Stop();
     return minCdSCellValue;
 }
+float getRPSX(){
+    float val = RPS.X();
+    while(val<0)
+        val = RPS.X();
+    return val;
+}
+float getRPSY(){
+    float val = RPS.Y();
+    while(val<0)
+        val = RPS.Y();
+    return val;
+}
+float getRPSHeading(){
+    getRPSX();
+    return RPS.Heading();
+}
+
 /*void performanceTestOne()
 {
     float light = 3.3;
