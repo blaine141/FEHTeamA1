@@ -94,7 +94,7 @@ float min(float a, float b)
 
 void whereAmI();
 void drivePolar(float angle, float distance, float percent);
-void drivePolarNew(float angle, float distance, float percent, float absoluteDirection);
+void drivePolarNew(float angle, float distance, float percent);
 bool driveToCoordinate(float x, float y, float percent);
 bool driveToCoordinateNew(float x, float y, float percent);
 bool turnToAngle(float angle);
@@ -119,6 +119,7 @@ int main()
     bicep.SetMin(1211);
     bicep.SetMax(2100);
     bicepStretch();
+    SD.OpenLog();
     RPS.InitializeTouchMenu();
 
 
@@ -426,7 +427,7 @@ void drivePolar(float angle, float distance, float percent)
 }
 
 
-void drivePolarNew(float angle, float distance, float percent, float absoluteDirection)
+void drivePolarNew(float angle, float distance, float percent)
 {
     angle+=45;
     distance = distance * 500 / 81;
@@ -455,6 +456,8 @@ void drivePolarNew(float angle, float distance, float percent, float absoluteDir
     float lastX = getRPSX();
     float lastY = getRPSY();
     bool correctionMade = false;
+
+    int absoluteDirection = (int)(angle + curAngle) % 360;
 
     double lastTime = TimeNow();
 
@@ -601,7 +604,9 @@ bool driveToCoordinateNew(float x, float y, float percent)
 
     float distance = sqrt((y-curY)*(y-curY)+(x-curX)*(x-curX));
 
-    drivePolarNew(angle, distance, percent, absoluteAngle);
+    SD.Printf("%f,%f,%f,f,%f,%f\n", curX, curY, x, y, distance, angle);
+
+    drivePolarNew(angle, distance, percent);
 
     curX = x;
     curY = y;
