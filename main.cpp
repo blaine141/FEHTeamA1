@@ -32,7 +32,7 @@ double curAngle = 0;
 
 
 
-#define MOTOR_SPEED 60.0
+#define MOTOR_SPEED 75.0
 #define PI 3.1415926536
 
 
@@ -108,16 +108,21 @@ void buttonDecision(int direction);
 float getRPSX();
 float getRPSY();
 float getRPSHeading();
+void bicepSlowFlex(int ms);
+void RPSbutton();
+
 
 int main()
 {
-    RPS.InitializeTouchMenu();
     spin.SetMin(512);
     spin.SetMax(2600);
     bicep.SetMin(1211);
-    bicep.SetMax(2340);
+    bicep.SetMax(2100);
+    bicepStretch();
+    RPS.InitializeTouchMenu();
 
-    bicepFlex();
+
+    bicepSlowFlex(1000);
 
     float light = 3.3;
     int direction;
@@ -137,7 +142,13 @@ int main()
 
     whereAmI();
 
-
+   /*
+    * float RPSbuttonX = RPS.X();
+    * float RPSbuttonY = RPS.Y();
+    * driveToCoordinate(curX-8,curY,MOTOR_SPEED);
+    *
+    *
+    */
     while(turnToAngle(90))
     {
         Sleep(1000);
@@ -190,19 +201,19 @@ int main()
     turnToAngle(90);
     driveToCoordinateNew(curX-14, curY, MOTOR_SPEED);
 
-    driveToCoordinateNew(6.2,8,MOTOR_SPEED);
+    driveToCoordinateNew(5.2,8,MOTOR_SPEED);
 
     driveToCoordinateNew(curX, curY - 4, MOTOR_SPEED);
 
-    driveToCoordinateNew(curX + 2, curY, MOTOR_SPEED);
+    driveToCoordinateNew(curX + 3, curY, MOTOR_SPEED);
 
     Sleep(1000);
 
     whereAmI();
 
-    driveToCoordinateNew(curX - 2, curY, MOTOR_SPEED);
+    driveToCoordinateNew(curX - 3, curY, MOTOR_SPEED);
 
-    driveToCoordinateNew(curX, curY + 4, MOTOR_SPEED);
+    driveToCoordinateNew(curX+2, curY + 4, MOTOR_SPEED);
 
 
     //drive to wrench
@@ -228,7 +239,7 @@ int main()
     Sleep(500);
     driveToCoordinateNew(curX-6,curY,MOTOR_SPEED);
     Sleep(500);
-    bicepSlowFlex();
+    bicepSlowFlex(1000);
     Sleep(500);
     driveToCoordinateNew(curX+3.5,curY+5,MOTOR_SPEED);
     driveToCoordinateNew(curX-5, curY , MOTOR_SPEED);
@@ -237,7 +248,7 @@ int main()
     driveUpHill(MOTOR_SPEED);
     Sleep(1000);
     whereAmI();
-    driveToCoordinateNew(curX+5, curY , MOTOR_SPEED);
+    driveToCoordinateNew(curX+5, curY+5 , MOTOR_SPEED);
     //Turn to face garage
     turnToAngle(45);
     Sleep(1000);
@@ -296,13 +307,13 @@ int main()
     driveToCoordinateNew(14.8, 55.7, MOTOR_SPEED);
     driveToCoordinateNew(curX,curY - 10,MOTOR_SPEED);
     //Drive towards ramp
-    driveToCoordinateNew(curX + 12,curY,MOTOR_SPEED);
+    driveToCoordinateNew(curX + 10,curY,MOTOR_SPEED);
     //Turn and go backwards down the ramp
     turnToAngle(0);
     driveToCoordinateNew(curX,curY-25,MOTOR_SPEED);
-
-    turnCC(180);
     bicepFlex();
+    turnCC(180);
+
     Sleep(1000);
     whereAmI();
 
@@ -316,7 +327,7 @@ int main()
 }
 
 
-#define STRETCH_POSITION 110
+#define STRETCH_POSITION 180
 
 void bicepStretch()
 {
@@ -338,7 +349,7 @@ void bicepSlowFlex(int ms){
     long start = TimeNowMSec();
     while(TimeNowMSec() - start < ms)
     {
-        bicep.SetDegree(180-(TikeNowMSec()-start)*180/ms);
+        bicep.SetDegree(STRETCH_POSITION-(TimeNowMSec()-start)*STRETCH_POSITION/ms);
     }
 
 }
@@ -528,6 +539,7 @@ void drivePolarNew(float angle, float distance, float percent, float absoluteDir
     frontRight.Stop();
     backLeft.Stop();
     backRight.Stop();
+    curAngle = getRPSHeading();
 }
 
 
@@ -699,17 +711,17 @@ void buttonDecision(int direction)
     {
         driveToCoordinate(curX-3,curY,MOTOR_SPEED);
         driveToCoordinateNew(curX, curY-3, MOTOR_SPEED/2);
-        driveToCoordinate(curX+3,curY+1,MOTOR_SPEED);
-        driveToCoordinate(curX,curY-1,MOTOR_SPEED);
+        driveToCoordinate(curX+3,curY+2,MOTOR_SPEED);
+        driveToCoordinate(curX,curY-2.5,MOTOR_SPEED);
     }
     else
     {
        driveToCoordinateNew(curX+3.5,curY,MOTOR_SPEED);
        driveToCoordinateNew(curX, curY-3, MOTOR_SPEED/2);
-       driveToCoordinate(curX-3,curY+1,MOTOR_SPEED);
-       driveToCoordinate(curX,curY-1,MOTOR_SPEED);
+       driveToCoordinate(curX-3,curY+2,MOTOR_SPEED);
+       driveToCoordinate(curX,curY-2.5,MOTOR_SPEED);
     }
-
+    long startTime = TimeNowMSec();
     while(RPS.IsDeadzoneActive() != 2)
     {
         if(RPS.IsDeadzoneActive() != 1)
@@ -726,7 +738,17 @@ void buttonDecision(int direction)
             backLeft.Stop();
             backRight.Stop();
         }
-
+        if (TimeNowMSec()-startTime == 5000){
+            setFrontLeftSpeed(-MOTOR_SPEED/2);
+            setFrontRightSpeed(MOTOR_SPEED/2);
+            setBackLeftSpeed(MOTOR_SPEED/2);
+            setBackRightSpeed(-MOTOR_SPEED/2);
+            Sleep(500);
+            frontLeft.Stop();
+            frontRight.Stop();
+            backLeft.Stop();
+            backRight.Stop();
+        }
     }
     whereAmI();
     driveToCoordinateNew(24.5, 18.0 , MOTOR_SPEED);
@@ -772,6 +794,9 @@ float getRPSY(){
 float getRPSHeading(){
     getRPSX();
     return RPS.Heading();
+}
+void RPSbutton(){
+    LCD.Clear();
 }
 
 /*void performanceTestOne()
