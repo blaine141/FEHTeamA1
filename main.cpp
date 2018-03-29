@@ -9,7 +9,7 @@
 #include <FEHBattery.h>
 #include <math.h>
 #include <FEHRPS.h>
-
+#include <FEHBuzzer.h>
 
 
 FEHMotor frontLeft(FEHMotor::Motor0,5.0);
@@ -119,7 +119,6 @@ int main()
     bicep.SetMin(1211);
     bicep.SetMax(2100);
     bicepStretch();
-    SD.OpenLog();
     RPS.InitializeTouchMenu();
 
 
@@ -128,7 +127,8 @@ int main()
     float light = 3.3;
     int direction;
 
-
+    float courseOffsetX = getRPSX() - 0.9;
+    float courseOffsetY = getRPSY() - 7.6;
 
     if(Battery.Voltage() < 10.8)
     {
@@ -138,18 +138,22 @@ int main()
 	}
 
 
+    LCD.WriteLine("MOVE ME!!   ");
+    LCD.WriteLine(courseOffsetX);
+    LCD.WriteLine(courseOffsetY);
+
+    while(getRPSX() < 15){}
+
     Sleep(1000);
 
 
     whereAmI();
 
-   /*
-    * float RPSbuttonX = RPS.X();
-    * float RPSbuttonY = RPS.Y();
-    * driveToCoordinate(curX-8,curY,MOTOR_SPEED);
-    *
-    *
-    */
+/*
+    float RPSbuttonX = RPS.X();
+    float RPSbuttonY = RPS.Y();
+    driveToCoordinate(curX-8,curY,MOTOR_SPEED);*/
+
     while(turnToAngle(90))
     {
         Sleep(1000);
@@ -159,12 +163,24 @@ int main()
     whereAmI();
 
     
-    while(driveToCoordinate(15.6,25.9,MOTOR_SPEED)) 
+    while(driveToCoordinate(15.6 + courseOffsetX,25.9 + courseOffsetY,MOTOR_SPEED))
     {
         Sleep(1000);
         whereAmI();
     }
     bicepFlex();
+
+
+    while(RPS.X()>0)
+    {
+        bicepStretch();
+        Buzzer.Buzz(0);
+        bicepSlowFlex(500);
+        LCD.WriteLine("COVER ME BROOOOOOO!!!!!!");
+
+    }
+
+    Buzzer.Buzz(1);
 
     LCD.Clear(FEHLCD::White);
     LCD.PrintImage(35,0);
@@ -185,7 +201,11 @@ int main()
 
     driveToCoordinateNew(curX, curY - 8, MOTOR_SPEED);
     //Drive to light
-    driveToCoordinateNew(24.5, 18.0 , MOTOR_SPEED);
+    while(driveToCoordinateNew(24.5 + courseOffsetX, 17.7 + courseOffsetY, MOTOR_SPEED))
+    {
+        Sleep(1000);
+        whereAmI();
+    }
     //Pick a light and drive to it
     Sleep(500);
     if(CdS_Cell.Value() < 0.7){
@@ -202,7 +222,7 @@ int main()
     turnToAngle(90);
     driveToCoordinateNew(curX-14, curY, MOTOR_SPEED);
 
-    driveToCoordinateNew(5.2,8,MOTOR_SPEED);
+    driveToCoordinateNew(5.2 + courseOffsetX,8 + courseOffsetY,MOTOR_SPEED);
 
     driveToCoordinateNew(curX, curY - 4, MOTOR_SPEED);
 
@@ -229,7 +249,7 @@ int main()
     whereAmI();
 
 
-    while(driveToCoordinate(11,13.1,MOTOR_SPEED))
+    while(driveToCoordinate(11 + courseOffsetX, 13.1 + courseOffsetY,MOTOR_SPEED))
     {
         Sleep(1000);
         whereAmI();
@@ -249,7 +269,7 @@ int main()
     driveUpHill(MOTOR_SPEED);
     Sleep(1000);
     whereAmI();
-    driveToCoordinateNew(curX+5, curY+5 , MOTOR_SPEED);
+    driveToCoordinateNew(curX+4, curY+4 , MOTOR_SPEED);
     //Turn to face garage
     turnToAngle(45);
     Sleep(1000);
@@ -257,7 +277,7 @@ int main()
 
 
     //Drive to road leading up to garage
-    driveToCoordinateNew(13.8, 56.7, MOTOR_SPEED);
+    driveToCoordinateNew(13.8 + courseOffsetX, 56.7 + courseOffsetY, MOTOR_SPEED);
     Sleep(500);
     curAngle = RPS.Heading();
     turnToAngle(45);
@@ -287,7 +307,7 @@ int main()
 
     whereAmI();
 
-    while(driveToCoordinate(21.6,62.6,MOTOR_SPEED))
+    while(driveToCoordinate(21.3 + courseOffsetX,62.9 + courseOffsetY,MOTOR_SPEED))
     {
        Sleep(1000);
        whereAmI();
@@ -305,7 +325,7 @@ int main()
     Sleep(1000);
     //NO LONGER SPINNING THE BOY
     //Drive back to road
-    driveToCoordinateNew(14.8, 55.7, MOTOR_SPEED);
+    driveToCoordinateNew(14.8 + courseOffsetX, 55.7 + courseOffsetY, MOTOR_SPEED);
     driveToCoordinateNew(curX,curY - 10,MOTOR_SPEED);
     //Drive towards ramp
     driveToCoordinateNew(curX + 10,curY,MOTOR_SPEED);
@@ -459,13 +479,15 @@ void drivePolarNew(float angle, float distance, float percent)
 
     int absoluteDirection = (int)(angle + curAngle) % 360;
 
+
+
     double lastTime = TimeNow();
 
     while(abs((abs(BLPos) + abs(FRPos)) / 2 - abs(YEnd)) > allowableError || abs((abs(BRPos) + abs(FLPos)) / 2 - abs(XEnd)) > allowableError)
     {
 
-        float slowdownFactorY = min(abs((abs(BLPos) + abs(FRPos)) / 2 - YEnd) / 12,1);
-        float slowdownFactorX = min(abs((abs(BRPos) + abs(FLPos)) / 2 - XEnd) / 12,1);
+        float slowdownFactorY = min(abs((abs(BLPos) + abs(FRPos)) / 2 - abs(YEnd)) / 12,1);
+        float slowdownFactorX = min(abs((abs(BRPos) + abs(FLPos)) / 2 - abs(XEnd)) / 12,1);
 
 
         if(frontLeftEncoder.NewCount())
@@ -604,7 +626,6 @@ bool driveToCoordinateNew(float x, float y, float percent)
 
     float distance = sqrt((y-curY)*(y-curY)+(x-curX)*(x-curX));
 
-    SD.Printf("%f,%f,%f,f,%f,%f\n", curX, curY, x, y, distance, angle);
 
     drivePolarNew(angle, distance, percent);
 
