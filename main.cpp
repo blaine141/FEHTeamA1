@@ -31,6 +31,8 @@ double curAngle = 0;
 float courseOffsetX;
 float courseOffsetY;
 
+const double lightX = 25.0;
+const double lightY = 17.7;
 
 
 
@@ -206,9 +208,9 @@ int main()
     /// START OF MATCH
     /////////////////////////////////////////////
 
-    driveToCoordinateNew(curX, 17.7 + courseOffsetY, MOTOR_SPEED);
+    driveToCoordinateNew(curX, lightY + courseOffsetY, MOTOR_SPEED);
     //Drive to light
-    while(driveToCoordinateNew(25.0 + courseOffsetX, 17.7 + courseOffsetY, MOTOR_SPEED))
+    while(driveToCoordinateNew(lightX + courseOffsetX, lightY + courseOffsetY, MOTOR_SPEED))
     {
         Sleep(1000);
         whereAmI();
@@ -766,7 +768,8 @@ void buttonDecision(int direction)
        driveToCoordinate(curX,curY-2.5,MOTOR_SPEED);
     }
     long startTime = TimeNowMSec();
-    while(RPS.IsDeadzoneActive() != 2)
+    int trials = 0;
+    while(RPS.IsDeadzoneActive() != 2 && trials < 3)
     {
         if(RPS.IsDeadzoneActive() != 1)
         {
@@ -782,21 +785,16 @@ void buttonDecision(int direction)
             backLeft.Stop();
             backRight.Stop();
         }
-        if (TimeNowMSec()-startTime == 6000){
-            setFrontLeftSpeed(-MOTOR_SPEED/2);
-            setFrontRightSpeed(MOTOR_SPEED/2);
-            setBackLeftSpeed(MOTOR_SPEED/2);
-            setBackRightSpeed(-MOTOR_SPEED/2);
-            Sleep(500);
-            frontLeft.Stop();
-            frontRight.Stop();
-            backLeft.Stop();
-            backRight.Stop();
+        if (TimeNowMSec()-startTime == 7000){
+            whereAmI();
+            driveToCoordinateNew(lightX + courseOffsetX, lightY + courseOffsetY, MOTOR_SPEED);
+            driveToCoordinateNew(curX, curY-3.2, MOTOR_SPEED/2);
             startTime = TimeNowMSec();
+            trials++;
         }
     }
     whereAmI();
-    driveToCoordinateNew(24.5 + courseOffsetX, 19.0 + courseOffsetY, MOTOR_SPEED);
+    driveToCoordinateNew(lightX + courseOffsetX, lightY + courseOffsetY, MOTOR_SPEED);
 }
 float driveLeftFourCdSCell(int counts, float power)
 {
