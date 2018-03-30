@@ -36,7 +36,7 @@ const double lightY = 17.7;
 
 
 
-#define MOTOR_SPEED 75.0
+#define MOTOR_SPEED 80.0
 #define PI 3.1415926536
 
 
@@ -255,17 +255,21 @@ int main()
         whereAmI();
     }
 
-    whereAmI();
-
 
     while(driveToCoordinate(11 + courseOffsetX, 13.1 + courseOffsetY,MOTOR_SPEED))
     {
         Sleep(1000);
         whereAmI();
     }
+
+    while(turnToAngle(90))
+    {
+        Sleep(1000);
+        whereAmI();
+    }
+
     //Pick up wrench and drive to ramp
     bicepStretch();
-    turnToAngle(90);
     Sleep(500);
     driveToCoordinateNew(curX-6,curY,MOTOR_SPEED);
     Sleep(500);
@@ -285,14 +289,16 @@ int main()
     whereAmI();
 
     //Drive to road leading up to garage
-    driveToCoordinateNew(13.3 + courseOffsetX, 55.4 + courseOffsetY, MOTOR_SPEED);
+    driveToCoordinate(13.3 + courseOffsetX, 55.4 + courseOffsetY, MOTOR_SPEED);
     Sleep(1000);
     while(RPS.X()<0)
     {
-        driveToCoordinateNew(curX + 1, curY - 1, MOTOR_SPEED);
+        driveToCoordinate(curX + 1, curY - 1, MOTOR_SPEED);
         Sleep(1000);
     }
+
     curAngle = getRPSHeading();
+    driveToCoordinate(13.3 + courseOffsetX, 55.4 + courseOffsetY, MOTOR_SPEED);
     turnToAngle(45);
     bicepHalfFlex();
     //Drive to garage and deposit wrench
@@ -785,9 +791,10 @@ void buttonDecision(int direction)
             backLeft.Stop();
             backRight.Stop();
         }
-        if (TimeNowMSec()-startTime == 7000){
+        if (TimeNowMSec()-startTime >= 7000){
             whereAmI();
             driveToCoordinateNew(lightX + courseOffsetX, lightY + courseOffsetY, MOTOR_SPEED);
+            turnToAngle(90);
             driveToCoordinateNew(curX, curY-3.2, MOTOR_SPEED/2);
             startTime = TimeNowMSec();
             trials++;
