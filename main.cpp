@@ -435,35 +435,48 @@ void drivePolar(float angle, float distance, float percent)
 
     double lastTime = TimeNow();
 
+    int FLDir;
+    int FRDir;
+    int BLDir;
+    int BRDir;
+
     while((abs(BLPos) + abs(FRPos)) / 2 - abs(YEnd) < -allowableError || (abs(BRPos) + abs(FLPos)) / 2 - abs(XEnd) < -allowableError)
     {
         if(frontLeftEncoder.NewCount())
-            FLPos += isPositive(XSpeed);
+            FLPos += FLDir;
         if(frontRightEncoder.NewCount())
-            FRPos += isPositive(YSpeed);
+            FRPos += FRDir;
         if(backLeftEncoder.NewCount())
-            BLPos += isPositive(YSpeed);
+            BLPos += BLDir;
         if(backRightEncoder.NewCount())
-            BRPos += isPositive(XSpeed);
-
+            BRPos += BRDir;
 
         double currentTime = TimeNow();
-
-        FLPredicted += XSpeed*(currentTime - lastTime);
-        FRPredicted += YSpeed*(currentTime - lastTime);
-        BLPredicted += YSpeed*(currentTime - lastTime);
-        BRPredicted += XSpeed*(currentTime - lastTime);
-
-        lastTime = currentTime;
-
 
         float slowdownFactorY = min(abs((abs(BLPos) + abs(FRPos)) / 2 - YEnd) / 12,1);
         float slowdownFactorX = min(abs((abs(BRPos) + abs(FLPos)) / 2 - XEnd) / 12,1);
 
-        setFrontLeftSpeed(XSpeed * slowdownFactorX + p * (FLPredicted - FLPos));
-        setFrontRightSpeed(YSpeed * slowdownFactorY + p * (FRPredicted - FRPos));
-        setBackLeftSpeed(YSpeed * slowdownFactorY + p * (BLPredicted - BLPos));
-        setBackRightSpeed(XSpeed * slowdownFactorX + p * (BRPredicted - BRPos));
+        FLPredicted += XSpeed*slowdownFactorX*(currentTime - lastTime);
+        FRPredicted += YSpeed*slowdownFactorY*(currentTime - lastTime);
+        BLPredicted += YSpeed*slowdownFactorY*(currentTime - lastTime);
+        BRPredicted += XSpeed* slowdownFactorX*(currentTime - lastTime);
+
+        lastTime = currentTime;
+
+        double FLSpeed = XSpeed * slowdownFactorX + p * (FLPredicted - FLPos);
+        double FRSpeed = YSpeed * slowdownFactorY + p * (FRPredicted - FRPos);
+        double BLSpeed = YSpeed * slowdownFactorY + p * (BLPredicted - BLPos);
+        double BRSpeed = XSpeed * slowdownFactorX + p * (BRPredicted - BRPos);
+
+        FLDir = FLSpeed > 0?1:-1;
+        FRDir = FRSpeed > 0?1:-1;
+        BLDir = BLSpeed > 0?1:-1;
+        BRDir = BRSpeed > 0?1:-1;
+
+        setFrontLeftSpeed(FLSpeed);
+        setFrontRightSpeed(FRSpeed);
+        setBackLeftSpeed(BLSpeed);
+        setBackRightSpeed(BRSpeed);
     }
     frontLeft.Stop();
     frontRight.Stop();
@@ -504,7 +517,10 @@ void drivePolarNew(float angle, float distance, float percent)
 
     int absoluteDirection = (int)(angle + curAngle) % 360;
 
-
+    int FLDir;
+    int FRDir;
+    int BLDir;
+    int BRDir;
 
     double lastTime = TimeNow();
 
@@ -516,13 +532,13 @@ void drivePolarNew(float angle, float distance, float percent)
 
 
         if(frontLeftEncoder.NewCount())
-            FLPos += isPositive(XSpeed * slowdownFactorX + p * (FLPredicted - FLPos));
+            FLPos += FLDir;
         if(frontRightEncoder.NewCount())
-            FRPos += isPositive(YSpeed * slowdownFactorY + p * (FRPredicted - FRPos));
+            FRPos += FRDir;
         if(backLeftEncoder.NewCount())
-            BLPos += isPositive(YSpeed * slowdownFactorY + p * (BLPredicted - BLPos));
+            BLPos += BLDir;
         if(backRightEncoder.NewCount())
-            BRPos += isPositive(XSpeed * slowdownFactorX + p * (BRPredicted - BRPos));
+            BRPos += BRDir;
 
         if(!correctionMade)
         {
@@ -570,20 +586,28 @@ void drivePolarNew(float angle, float distance, float percent)
 
         double currentTime = TimeNow();
 
-        FLPredicted += XSpeed*(currentTime - lastTime);
-        FRPredicted += YSpeed*(currentTime - lastTime);
-        BLPredicted += YSpeed*(currentTime - lastTime);
-        BRPredicted += XSpeed*(currentTime - lastTime);
+        FLPredicted += XSpeed*(currentTime - lastTime) * slowdownFactorX;
+        FRPredicted += YSpeed*(currentTime - lastTime) * slowdownFactorY;
+        BLPredicted += YSpeed*(currentTime - lastTime) * slowdownFactorY;
+        BRPredicted += XSpeed*(currentTime - lastTime) * slowdownFactorX;
 
         lastTime = currentTime;
 
 
+        double FLSpeed = XSpeed * slowdownFactorX + p * (FLPredicted - FLPos);
+        double FRSpeed = YSpeed * slowdownFactorY + p * (FRPredicted - FRPos);
+        double BLSpeed = YSpeed * slowdownFactorY + p * (BLPredicted - BLPos);
+        double BRSpeed = XSpeed * slowdownFactorX + p * (BRPredicted - BRPos);
 
+        FLDir = FLSpeed > 0?1:-1;
+        FRDir = FRSpeed > 0?1:-1;
+        BLDir = BLSpeed > 0?1:-1;
+        BRDir = BRSpeed > 0?1:-1;
 
-        setFrontLeftSpeed(XSpeed * slowdownFactorX + p * (FLPredicted - FLPos));
-        setFrontRightSpeed(YSpeed * slowdownFactorY + p * (FRPredicted - FRPos));
-        setBackLeftSpeed(YSpeed * slowdownFactorY + p * (BLPredicted - BLPos));
-        setBackRightSpeed(XSpeed * slowdownFactorX + p * (BRPredicted - BRPos));
+        setFrontLeftSpeed(FLSpeed);
+        setFrontRightSpeed(FRSpeed);
+        setBackLeftSpeed(BLSpeed);
+        setBackRightSpeed(BRSpeed);
     }
     frontLeft.Stop();
     frontRight.Stop();
@@ -725,11 +749,15 @@ void turnCC(float degrees)
     frontLeftEncoder.ResetCounts();
     backLeftEncoder.ResetCounts();
     backRightEncoder.ResetCounts();
-    frontLeft.SetPercent(-50.);
-    frontRight.SetPercent(50.);
-    backRight.SetPercent(50.);
-    backLeft.SetPercent(-50.);
-    while(frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts() < counts*4) {}
+    while(frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts() < counts*4)
+    {
+        int offset = degrees - (frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts())/4*2.1;
+        float speed = 30+degrees * 70/180;
+        setFrontLeftSpeed(-speed);
+        setFrontRightSpeed(speed);
+        setBackLeftSpeed(speed);
+        setFrontRightSpeed(-speed);
+    }
     frontLeft.Stop();
     frontRight.Stop();
     backLeft.Stop();
@@ -744,11 +772,15 @@ void turnC(float degrees)
     frontLeftEncoder.ResetCounts();
     backLeftEncoder.ResetCounts();
     backRightEncoder.ResetCounts();
-    frontLeft.SetPercent(50.);
-    frontRight.SetPercent(-50.);
-    backRight.SetPercent(-50.);
-    backLeft.SetPercent(50.);
-    while(frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts() < counts*4) {}
+    while(frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts() < counts*4)
+    {
+        int offset = degrees - (frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts())/4*2.1;
+        float speed = 30+degrees * 70/180;
+        setFrontLeftSpeed(speed);
+        setFrontRightSpeed(-speed);
+        setBackLeftSpeed(-speed);
+        setFrontRightSpeed(speed);
+    }
     frontLeft.Stop();
     frontRight.Stop();
     backLeft.Stop();
