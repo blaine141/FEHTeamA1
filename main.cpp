@@ -33,6 +33,7 @@ float courseOffsetY;
 
 const double lightX = 25.0;
 const double lightY = 17.7;
+bool start = false;
 
 
 
@@ -193,11 +194,18 @@ int main()
     LCD.SetFontColor(FEHLCD::Black);
 
     //Wait for light
-    while(light > 2.7)
+    long startingTime = TimeNowSec();
+    while(!start)
     {
         light = CdS_Cell.Value();
-
+        if (light < 2.7){
+            start = true;
+        }
+        if (TimeNowSec()-startingTime >= 30){
+            start = true;
+        }
         whereAmI();
+
 
         //LCD.WriteAt(curX,0,0);
         //LCD.WriteAt(curY,0,40);
@@ -231,11 +239,11 @@ int main()
     turnToAngle(90);
     driveToCoordinateNew(curX-14, curY+3, MOTOR_SPEED);
 
-    driveToCoordinateNew(5.2 + courseOffsetX,8 + courseOffsetY,MOTOR_SPEED);
+    driveToCoordinateNew(2.2 + courseOffsetX,8 + courseOffsetY,MOTOR_SPEED);
 
     driveToCoordinateNew(curX, curY - 4, MOTOR_SPEED);
 
-    driveToCoordinateNew(curX + 3, curY, MOTOR_SPEED);
+    driveToCoordinateNew(curX + 6, curY, MOTOR_SPEED);
 
     Sleep(1000);
 
@@ -271,25 +279,27 @@ int main()
     //Pick up wrench and drive to ramp
     bicepStretch();
     Sleep(500);
-    driveToCoordinateNew(curX-6,curY,MOTOR_SPEED/2);
+    driveToCoordinateNew(curX-5,curY,MOTOR_SPEED/2);
+    Sleep(500);
+    driveToCoordinateNew(curX+0.7,curY,MOTOR_SPEED/2);
     Sleep(500);
     bicepSlowFlex(1000);
     Sleep(500);
-    driveToCoordinateNew(curX+3.5,curY+5,MOTOR_SPEED);
-    driveToCoordinateNew(curX-5, curY , MOTOR_SPEED);
+    driveToCoordinateNew(curX+3.5,curY+8,MOTOR_SPEED);
+    driveToCoordinateNew(curX-4, curY , MOTOR_SPEED);
     turnToAngle(0);
     //Drive up the hill
     driveUpHill(MOTOR_SPEED);
     Sleep(1000);
     whereAmI();
-    driveToCoordinateNew(curX+4, curY+4 , MOTOR_SPEED);
+    driveToCoordinateNew(curX+4, curY+6 , MOTOR_SPEED);
     //Turn to face garage
     turnToAngle(45);
     Sleep(1000);
     whereAmI();
 
     //Drive to road leading up to garage
-    driveToCoordinate(13.3 + courseOffsetX, 55.4 + courseOffsetY, MOTOR_SPEED);
+    driveToCoordinate(14.0 + courseOffsetX, 56.2 + courseOffsetY, MOTOR_SPEED);
     Sleep(1000);
     while(RPS.X()<0)
     {
@@ -298,7 +308,12 @@ int main()
     }
 
     curAngle = getRPSHeading();
-    driveToCoordinate(13.3 + courseOffsetX, 55.4 + courseOffsetY, MOTOR_SPEED);
+    driveToCoordinate(14.0 + courseOffsetX, 56.2 + courseOffsetY, MOTOR_SPEED);
+    while(RPS.X()<0)
+    {
+        driveToCoordinate(curX + 1, curY - 1, MOTOR_SPEED);
+        Sleep(1000);
+    }
     turnToAngle(45);
     bicepHalfFlex();
     //Drive to garage and deposit wrench
