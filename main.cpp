@@ -726,22 +726,24 @@ void turnCC(float degrees)
         setFrontRightSpeed(30);
         setBackLeftSpeed(-30);
         setBackRightSpeed(30);
-        Sleep((int)(degrees/0.0525));
-        return;
+        Sleep(degrees/52.5);
     }
-    int counts = degrees / 2.1;
-    frontRightEncoder.ResetCounts();
-    frontLeftEncoder.ResetCounts();
-    backLeftEncoder.ResetCounts();
-    backRightEncoder.ResetCounts();
-    while(frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts() < counts*4)
+    else
     {
-        int offset = degrees - (frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts())/4*2.1;
-        float speed = 20+offset * 80/180;
-        setFrontLeftSpeed(-speed);
-        setFrontRightSpeed(speed);
-        setBackLeftSpeed(-speed);
-        setBackRightSpeed(speed);
+        int counts = degrees / 2.1;
+        frontRightEncoder.ResetCounts();
+        frontLeftEncoder.ResetCounts();
+        backLeftEncoder.ResetCounts();
+        backRightEncoder.ResetCounts();
+        while(frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts() < counts*4)
+        {
+            int offset = degrees - (frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts())/4*2.1;
+            float speed = 20+offset * 80/180;
+            setFrontLeftSpeed(-speed);
+            setFrontRightSpeed(speed);
+            setBackLeftSpeed(-speed);
+            setBackRightSpeed(speed);
+        }
     }
     frontLeft.Stop();
     frontRight.Stop();
@@ -758,22 +760,24 @@ void turnC(float degrees)
         setFrontRightSpeed(-30);
         setBackLeftSpeed(30);
         setBackRightSpeed(-30);
-        Sleep((int)(degrees/0.0525));
-        return;
+        Sleep(degrees/52.5);
     }
-    int counts = degrees / 2.1;
-    frontRightEncoder.ResetCounts();
-    frontLeftEncoder.ResetCounts();
-    backLeftEncoder.ResetCounts();
-    backRightEncoder.ResetCounts();
-    while(frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts() < counts*4)
+    else
     {
-        int offset = degrees - (frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts())/4*2.1;
-        float speed = 20+offset * 80/180;
-        setFrontLeftSpeed(speed);
-        setFrontRightSpeed(-speed);
-        setBackLeftSpeed(speed);
-        setBackRightSpeed(-speed);
+        int counts = degrees / 2.1;
+        frontRightEncoder.ResetCounts();
+        frontLeftEncoder.ResetCounts();
+        backLeftEncoder.ResetCounts();
+        backRightEncoder.ResetCounts();
+        while(frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts() < counts*4)
+        {
+            int offset = degrees - (frontLeftEncoder.Counts() + frontRightEncoder.Counts() + backLeftEncoder.Counts() + backRightEncoder.Counts())/4*2.1;
+            float speed = 20+offset * 80/180;
+            setFrontLeftSpeed(speed);
+            setFrontRightSpeed(-speed);
+            setBackLeftSpeed(speed);
+            setBackRightSpeed(-speed);
+        }
     }
     frontLeft.Stop();
     frontRight.Stop();
