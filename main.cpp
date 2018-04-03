@@ -31,7 +31,7 @@ double curAngle = 0;
 float courseOffsetX;
 float courseOffsetY;
 
-const double lightX = 25.0;
+const double lightX = 24.5;
 const double lightY = 17.7;
 bool start = false;
 
@@ -120,6 +120,14 @@ void RPSbutton();
 
 int main()
 {
+    if(Battery.Voltage() < 10.8)
+    {
+        LCD.WriteAt("Charge Me!",0,0);
+        LCD.WriteAt(Battery.Voltage(),0,40);
+        return 0;
+    }
+
+
     spin.SetMin(512);
     spin.SetMax(2600);
     bicep.SetMin(1211);
@@ -133,17 +141,16 @@ int main()
     float light = 3.3;
     int direction;
 
+    LCD.WriteLine("Not there yet");
+
+    while(abs((double)(((long)getRPSHeading()+180)%360-180))>10){
+        LCD.WriteAt(getRPSHeading(),150,0);
+    }
+
     courseOffsetX = getRPSX() - 0.9;
     courseOffsetY = getRPSY() - 7.6;
 
-    if(Battery.Voltage() < 10.8)
-    {
-        LCD.WriteAt("Charge Me!",0,0);
-        LCD.WriteAt(Battery.Voltage(),0,40);
-        return 0;
-	}
-
-
+    LCD.WriteLine("Course calibrated");
     LCD.WriteLine("MOVE ME!!   ");
     LCD.WriteLine(courseOffsetX);
     LCD.WriteLine(courseOffsetY);
@@ -233,17 +240,18 @@ int main()
         direction = 0;
 
     }
-    //LCD.WriteAt(CdS_Cell.Value(),0,120);
     buttonDecision(direction);
-    curAngle = RPS.Heading();
+    curAngle = getRPSHeading();
     turnToAngle(90);
+
+    // Drive to lever
     driveToCoordinateNew(curX-14, curY+3, MOTOR_SPEED);
 
-    driveToCoordinateNew(2.2 + courseOffsetX,8 + courseOffsetY,MOTOR_SPEED);
+    driveToCoordinateNew(3 + courseOffsetX,8 + courseOffsetY,MOTOR_SPEED);
 
     driveToCoordinateNew(curX, curY - 4, MOTOR_SPEED);
 
-    driveToCoordinateNew(curX + 6, curY, MOTOR_SPEED);
+    driveToCoordinateNew(curX + 5, curY, MOTOR_SPEED);
 
     Sleep(1000);
 
@@ -281,18 +289,18 @@ int main()
     Sleep(500);
     driveToCoordinateNew(curX-5,curY,MOTOR_SPEED/2);
     Sleep(500);
-    driveToCoordinateNew(curX+0.7,curY,MOTOR_SPEED/2);
-    Sleep(500);
     bicepSlowFlex(1000);
     Sleep(500);
     driveToCoordinateNew(curX+3.5,curY+8,MOTOR_SPEED);
     driveToCoordinateNew(curX-4, curY , MOTOR_SPEED);
     turnToAngle(0);
+    driveToCoordinateNew(curX-4, curY , MOTOR_SPEED);
     //Drive up the hill
     driveUpHill(MOTOR_SPEED);
     Sleep(1000);
     whereAmI();
     driveToCoordinateNew(curX+4, curY+6 , MOTOR_SPEED);
+
     //Turn to face garage
     turnToAngle(45);
     Sleep(1000);
@@ -308,12 +316,14 @@ int main()
     }
 
     curAngle = getRPSHeading();
-    driveToCoordinate(14.0 + courseOffsetX, 56.2 + courseOffsetY, MOTOR_SPEED);
+    driveToCoordinate(12.8 + courseOffsetX, 55.2 + courseOffsetY, MOTOR_SPEED);
     while(RPS.X()<0)
     {
         driveToCoordinate(curX + 1, curY - 1, MOTOR_SPEED);
         Sleep(1000);
     }
+    whereAmI();
+    driveToCoordinate(12.7 + courseOffsetX, 55.2 + courseOffsetY, MOTOR_SPEED);
     turnToAngle(45);
     bicepHalfFlex();
     //Drive to garage and deposit wrench
@@ -371,7 +381,7 @@ int main()
     turnToAngle(0);
     Sleep(1000);
     whereAmI();
-    driveToCoordinateNew(curX,curY-18,MOTOR_SPEED);
+    driveToCoordinateNew(curX,curY-15,MOTOR_SPEED);
     bicepFlex();
     turnCC(180);
 
@@ -839,6 +849,7 @@ void buttonDecision(int direction)
         if (TimeNowMSec()-startTime >= 7000){
             whereAmI();
             driveToCoordinateNew(lightX + courseOffsetX, lightY + courseOffsetY, MOTOR_SPEED);
+            Sleep(100);
             turnToAngle(90);
             driveToCoordinateNew(curX, curY-3.2, MOTOR_SPEED/2);
             startTime = TimeNowMSec();
