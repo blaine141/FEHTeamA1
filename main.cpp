@@ -31,7 +31,7 @@ double curAngle = 0;
 float courseOffsetX;
 float courseOffsetY;
 
-const double lightX = 24.5;
+const double lightX = 24.1;
 const double lightY = 17.7;
 bool start = false;
 
@@ -232,7 +232,15 @@ int main()
     }
     //Pick a light and drive to it
     Sleep(500);
-    if(CdS_Cell.Value() < 0.8){
+    int numberOfReadings = 20;
+    float brightness = 0;
+    for(int i = 0; i< numberOfReadings; i++)
+    {
+        brightness += CdS_Cell.Value();
+        Sleep(0.01);
+    }
+    brightness /= numberOfReadings;
+    if(brightness < 0.8){
         LCD.WriteAt("red",0,0);
         direction = 1;
     }else{
@@ -272,7 +280,7 @@ int main()
     }
 
 
-    while(driveToCoordinate(11 + courseOffsetX, 13.1 + courseOffsetY,MOTOR_SPEED))
+    while(driveToCoordinate(11 + courseOffsetX, 13.6 + courseOffsetY,MOTOR_SPEED))
     {
         Sleep(1000);
         whereAmI();
@@ -285,9 +293,12 @@ int main()
     }
 
     //Pick up wrench and drive to ramp
-    bicepStretch();
     Sleep(500);
-    driveToCoordinateNew(curX-5,curY,MOTOR_SPEED/2);
+
+    driveToCoordinateNew(curX-7.5,curY,MOTOR_SPEED/2);
+    driveToCoordinateNew(curX+1.3,curY,MOTOR_SPEED/2);
+    Sleep(500);
+    bicepStretch();
     Sleep(500);
     bicepSlowFlex(1000);
     Sleep(500);
@@ -315,19 +326,19 @@ int main()
         Sleep(1000);
     }
 
-    curAngle = getRPSHeading();
-    driveToCoordinate(12.8 + courseOffsetX, 55.2 + courseOffsetY, MOTOR_SPEED);
+    whereAmI();
+    driveToCoordinate(14.0 + courseOffsetX, 56.2 + courseOffsetY, MOTOR_SPEED);
     while(RPS.X()<0)
     {
         driveToCoordinate(curX + 1, curY - 1, MOTOR_SPEED);
         Sleep(1000);
     }
     whereAmI();
-    driveToCoordinate(12.7 + courseOffsetX, 55.2 + courseOffsetY, MOTOR_SPEED);
+
     turnToAngle(45);
     bicepHalfFlex();
     //Drive to garage and deposit wrench
-    drivePolar(0,13.5,MOTOR_SPEED);
+    drivePolar(0,14.5,MOTOR_SPEED);
     bicepStretch();
     Sleep(1000);
     drivePolar(180,12.9,MOTOR_SPEED);
@@ -381,7 +392,7 @@ int main()
     turnToAngle(0);
     Sleep(1000);
     whereAmI();
-    driveToCoordinateNew(curX,curY-15,MOTOR_SPEED);
+    driveToCoordinate(curX,curY-15,MOTOR_SPEED);
     bicepFlex();
     turnCC(180);
 
