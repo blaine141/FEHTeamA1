@@ -37,7 +37,7 @@ bool start = false;
 
 
 
-#define MOTOR_SPEED 80.0
+#define MOTOR_SPEED 100.0
 #define PI 3.1415926536
 
 
@@ -212,6 +212,7 @@ int main()
     float RPSbuttonX = RPS.X();
     float RPSbuttonY = RPS.Y();
     driveToCoordinate(curX-8,curY,MOTOR_SPEED);*/
+    Sleep(5.);
 
     while(turnToAngle(90))
     {
@@ -301,11 +302,11 @@ int main()
     // Drive to lever
     driveToCoordinateNew(curX-14, curY+3, MOTOR_SPEED);
 
-    driveToCoordinateNew(3 + courseOffsetX,8 + courseOffsetY,MOTOR_SPEED);
+    driveToCoordinateNew(2 + courseOffsetX,8 + courseOffsetY,MOTOR_SPEED);
 
     driveToCoordinateNew(curX, curY - 4, MOTOR_SPEED);
 
-    driveToCoordinateNew(curX + 5, curY, MOTOR_SPEED);
+    driveToCoordinateNew(curX + 6, curY, MOTOR_SPEED);
 
     Sleep(1000);
 
@@ -326,7 +327,7 @@ int main()
     }
 
 
-    while(driveToCoordinate(9 + courseOffsetX, 13.6 + courseOffsetY,MOTOR_SPEED))
+    while(driveToCoordinate(9 + courseOffsetX, 13.8 + courseOffsetY,MOTOR_SPEED))
     {
         Sleep(1000);
         whereAmI();
@@ -353,7 +354,7 @@ int main()
     turnToAngle(0);
     driveToCoordinateNew(curX-4, curY , MOTOR_SPEED);
     //Drive up the hill
-    driveUpHill(MOTOR_SPEED);
+    driveUpHill(MOTOR_SPEED-10);
     Sleep(1000);
     whereAmI();
     driveToCoordinateNew(curX+4, curY+6 , MOTOR_SPEED);
@@ -433,7 +434,7 @@ int main()
     driveToCoordinateNew(14.8 + courseOffsetX, 55.7 + courseOffsetY, MOTOR_SPEED);
     driveToCoordinateNew(curX,curY - 10,MOTOR_SPEED);
     //Drive towards ramp
-    driveToCoordinateNew(curX + 10,curY - 7,100);
+    driveToCoordinateNew(curX + 10,curY - 9,100);
     //Turn and go backwards down the ramp
     turnToAngle(0);
     Sleep(1000);
@@ -446,7 +447,7 @@ int main()
     whereAmI();
 
     //Drive to starting box
-    driveToCoordinateNew(curX-13,curY,100);
+    driveToCoordinateNew(curX-13.0,curY,100);
     //End the run
     while(true)
     {
@@ -717,7 +718,7 @@ bool driveToCoordinate(float x, float y, float percent)
 bool driveToCoordinateNew(float x, float y, float percent)
 {
     SD.Printf("%f,%f\n",x,y);
-    if(abs(x-curX) < .4 && abs(y-curY)<.4)
+    if(abs(x-curX) < .5 && abs(y-curY)<.5)
         return false;
 
 
@@ -761,9 +762,9 @@ bool turnToAngle(float angle)
     curAngle = angle;
 
 
-    if(angleError > 1)
+    if(angleError > 2)
         turnCC(angleError);
-    else if(angleError < -1)
+    else if(angleError < -2)
         turnC(-angleError);
     else
         return false;
