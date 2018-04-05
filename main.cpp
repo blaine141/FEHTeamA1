@@ -127,13 +127,25 @@ int main()
         return 0;
     }
 
-
-    spin.SetMin(512);
-    spin.SetMax(2600);
+    //spin.TouchCalibrate();
+    spin.SetMin(550);
+    spin.SetMax(2400);
     bicep.SetMin(1211);
     bicep.SetMax(2100);
     bicepStretch();
     SD.OpenLog();
+    /*while(true){
+    spin.SetDegree(180);
+    LCD.Write("Max");
+    Sleep(5.);
+    LCD.Clear();
+
+    spin.SetDegree(0);
+    LCD.Write("Min");
+    Sleep(5.);
+    LCD.Clear();
+    }
+    return 0;*/
     RPS.InitializeTouchMenu();
 
     bicepSlowFlex(1000);
@@ -147,13 +159,47 @@ int main()
         LCD.WriteAt(getRPSHeading(),150,0);
     }
 
-    courseOffsetX = getRPSX() - 0.9;
-    courseOffsetY = getRPSY() - 7.6;
+    long calibrationStartTime = TimeNowMSec();
+    float averageX = 0;
+    float averageY = 0;
+    int iterations = 0;
+    while(TimeNowMSec() - calibrationStartTime < 2000)
+    {
+        averageX += getRPSX();
+        averageY += getRPSY();
+        iterations++;
+    }
+    averageX /= iterations;
+    averageY /= iterations;
+
+    courseOffsetX = averageX - 0.9;
+    courseOffsetY = averageY - 7.6;
 
     LCD.WriteLine("Course calibrated");
     LCD.WriteLine("MOVE ME!!   ");
     LCD.WriteLine(courseOffsetX);
     LCD.WriteLine(courseOffsetY);
+
+    float x;
+    LCD.Touch(&x,&x);
+    while(!LCD.Touch(&x,&x)){}
+
+    calibrationStartTime = TimeNowMSec();
+    averageX = 0;
+    averageY = 0;
+    iterations = 0;
+    while(TimeNowMSec() - calibrationStartTime < 2000)
+    {
+        averageX += getRPSX();
+        averageY += getRPSY();
+        iterations++;
+    }
+    averageX /= iterations;
+    averageY /= iterations;
+    averageX -= 1.8;
+    averageY -= 1;
+
+    LCD.WriteLine("GO GO GO");
 
     while(getRPSX() < 15){}
 
@@ -280,23 +326,23 @@ int main()
     }
 
 
-    while(driveToCoordinate(11 + courseOffsetX, 13.6 + courseOffsetY,MOTOR_SPEED))
+    while(driveToCoordinate(9 + courseOffsetX, 13.6 + courseOffsetY,MOTOR_SPEED))
     {
         Sleep(1000);
         whereAmI();
     }
 
-    while(turnToAngle(90))
+   /* while(*/turnToAngle(90);/*)
     {
         Sleep(1000);
         whereAmI();
     }
-
+    */
     //Pick up wrench and drive to ramp
     Sleep(500);
 
-    driveToCoordinateNew(curX-7.5,curY,MOTOR_SPEED/2);
-    driveToCoordinateNew(curX+1.3,curY,MOTOR_SPEED/2);
+    driveToCoordinate(curX-5.5,curY,MOTOR_SPEED);
+    drivePolar(180,.8,MOTOR_SPEED);
     Sleep(500);
     bicepStretch();
     Sleep(500);
@@ -318,7 +364,7 @@ int main()
     whereAmI();
 
     //Drive to road leading up to garage
-    driveToCoordinate(14.0 + courseOffsetX, 56.2 + courseOffsetY, MOTOR_SPEED);
+    driveToCoordinate(13.0 + courseOffsetX, 55.6 + courseOffsetY, MOTOR_SPEED);
     Sleep(1000);
     while(RPS.X()<0)
     {
@@ -327,7 +373,7 @@ int main()
     }
 
     whereAmI();
-    driveToCoordinate(14.0 + courseOffsetX, 56.2 + courseOffsetY, MOTOR_SPEED);
+    driveToCoordinate(13.0 + courseOffsetX, 55.6 + courseOffsetY, MOTOR_SPEED);
     while(RPS.X()<0)
     {
         driveToCoordinate(curX + 1, curY - 1, MOTOR_SPEED);
@@ -355,7 +401,7 @@ int main()
 
     whereAmI();
 
-    while(driveToCoordinate(21.1 + courseOffsetX,62.7 + courseOffsetY,MOTOR_SPEED))
+    while(driveToCoordinate(averageX, averageY,MOTOR_SPEED))
     {
        Sleep(1000);
        whereAmI();
@@ -367,7 +413,7 @@ int main()
         whereAmI();
     }
 
-    while(driveToCoordinate(21.1 + courseOffsetX,62.7 + courseOffsetY,MOTOR_SPEED))
+    while(driveToCoordinate(averageX, averageY,MOTOR_SPEED))
     {
        Sleep(1000);
        whereAmI();
@@ -387,12 +433,12 @@ int main()
     driveToCoordinateNew(14.8 + courseOffsetX, 55.7 + courseOffsetY, MOTOR_SPEED);
     driveToCoordinateNew(curX,curY - 10,MOTOR_SPEED);
     //Drive towards ramp
-    driveToCoordinateNew(curX + 10,curY - 7,MOTOR_SPEED);
+    driveToCoordinateNew(curX + 10,curY - 7,100);
     //Turn and go backwards down the ramp
     turnToAngle(0);
     Sleep(1000);
     whereAmI();
-    driveToCoordinate(curX,curY-15,MOTOR_SPEED);
+    driveToCoordinate(curX,curY-15,100);
     bicepFlex();
     turnCC(180);
 
@@ -400,9 +446,15 @@ int main()
     whereAmI();
 
     //Drive to starting box
-    driveToCoordinateNew(curX-12,curY,MOTOR_SPEED);
+    driveToCoordinateNew(curX-13,curY,100);
     //End the run
-    driveToCoordinateNew(curX,curY+25,MOTOR_SPEED);
+    while(true)
+    {
+    driveToCoordinateNew(curX,curY+25,100);
+    Sleep(1000);
+    whereAmI();
+    }
+
     return 0;
 
 

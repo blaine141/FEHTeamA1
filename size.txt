@@ -1,2 +1,2 @@
    text	   data	    bss	    dec	    hex	filename
-  87500	    560	   6416	  94476	  1710c	../FEHTeamA1.elf
+  87620	    560	   6416	  94596	  17184	../FEHTeamA1.elf
