@@ -23,7 +23,7 @@ DigitalEncoder frontLeftEncoder(FEHIO::P2_0, FEHIO::EitherEdge);
 DigitalEncoder frontRightEncoder(FEHIO::P2_1, FEHIO::EitherEdge);
 DigitalEncoder backLeftEncoder(FEHIO::P2_2, FEHIO::EitherEdge);
 DigitalEncoder backRightEncoder(FEHIO::P2_3, FEHIO::EitherEdge);
-//I2C compass(FEHIO::P3_4,FEHIO::P3_4,0b0001101);
+
 
 double curX = 0;
 double curY = 0;
@@ -31,13 +31,13 @@ double curAngle = 0;
 float courseOffsetX;
 float courseOffsetY;
 
-const double lightX = 24.1;
+const double lightX = 23.8;
 const double lightY = 17.7;
 bool start = false;
 
 
 
-#define MOTOR_SPEED 100.0
+#define MOTOR_SPEED 90.0
 #define PI 3.1415926536
 
 
@@ -120,6 +120,7 @@ void RPSbutton();
 
 int main()
 {
+
     if(Battery.Voltage() < 10.8)
     {
         LCD.WriteAt("Charge Me!",0,0);
@@ -266,7 +267,7 @@ int main()
     }
 
 
-    //////////////////////////////////////////////
+    /////////////////////////////////////////////
     /// START OF MATCH
     /////////////////////////////////////////////
 
@@ -287,7 +288,7 @@ int main()
         Sleep(0.01);
     }
     brightness /= numberOfReadings;
-    if(brightness < 0.8){
+    if(brightness < 0.82){
         LCD.WriteAt("red",0,0);
         direction = 1;
     }else{
@@ -343,7 +344,7 @@ int main()
     Sleep(500);
 
     driveToCoordinate(curX-5.5,curY,MOTOR_SPEED);
-    drivePolar(180,.8,MOTOR_SPEED);
+    drivePolar(180,.8,75.0);
     Sleep(500);
     bicepStretch();
     Sleep(500);
@@ -374,6 +375,11 @@ int main()
     }
 
     whereAmI();
+    while(turnToAngle(45))
+    {
+        Sleep(1000);
+        whereAmI();
+    }
     driveToCoordinate(13.0 + courseOffsetX, 55.6 + courseOffsetY, MOTOR_SPEED);
     while(RPS.X()<0)
     {
@@ -383,7 +389,7 @@ int main()
     whereAmI();
 
     turnToAngle(45);
-    bicepHalfFlex();
+
     //Drive to garage and deposit wrench
     drivePolar(0,14.5,MOTOR_SPEED);
     bicepStretch();
@@ -881,15 +887,21 @@ void buttonDecision(int direction)
     if(direction)
     {
         driveToCoordinate(curX-3,curY,MOTOR_SPEED);
+        Sleep(500);
         driveToCoordinateNew(curX, curY-3.2, MOTOR_SPEED/2);
-        driveToCoordinate(curX+3,curY+2,MOTOR_SPEED);
+        Sleep(500);
+        driveToCoordinate(curX+3,curY+2,MOTOR_SPEED/2);
+        Sleep(500);
         driveToCoordinate(curX,curY-2.5,MOTOR_SPEED);
     }
     else
     {
        driveToCoordinateNew(curX+3.5,curY,MOTOR_SPEED);
+       Sleep(500);
        driveToCoordinateNew(curX, curY-3.2, MOTOR_SPEED/2);
+       Sleep(500);
        driveToCoordinate(curX-3,curY+2,MOTOR_SPEED);
+       Sleep(500);
        driveToCoordinate(curX,curY-2.5,MOTOR_SPEED);
     }
     long startTime = TimeNowMSec();
